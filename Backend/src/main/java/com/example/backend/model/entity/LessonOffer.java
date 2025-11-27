@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import java.util.List;
 
 @Entity
 @Getter
@@ -19,15 +21,24 @@ public class LessonOffer {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = false, length = 100)
     private String title;
-    private String description;
 
-    private String subject;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description;
 
     private String level;
 
     private BigDecimal price;
 
     private Integer durationMinutes;
+
+    @OneToMany
+    @ToString.Exclude
+    private List<Review> reviews;
+
+    @Column(name = "views_count", nullable = false)
+    @Builder.Default
+    private Integer viewsCount = 0;
 
 }
