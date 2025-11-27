@@ -54,6 +54,7 @@ public class UserService {
         return MeResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
                 .fullName(user.getFullName())
                 .avatarUrl(user.getAvatarURL())
                 .latitude(user.getLatitude())
@@ -158,6 +159,8 @@ public class UserService {
 
         return PublicUserProfileResponse.builder()
                 .id(targetUser.getId())
+                .phoneNumber(targetUser.getPhoneNumber())
+                .email(targetUser.getEmail())
                 .fullName(targetUser.getFullName())
                 .avatarUrl(targetUser.getAvatarURL())
                 .city(targetUser.getCity())

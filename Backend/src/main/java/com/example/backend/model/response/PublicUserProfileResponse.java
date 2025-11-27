@@ -14,6 +14,8 @@ import java.util.UUID;
 @Builder
 public class PublicUserProfileResponse {
     private UUID id;
+    private String phoneNumber;
+    private String email;
     private String fullName;
     private String avatarUrl;
 
