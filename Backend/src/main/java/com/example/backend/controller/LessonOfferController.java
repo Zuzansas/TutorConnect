@@ -13,9 +13,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.UUID;
 
+@Tag(name = "Lesson offer", description = "API do zarządzania ofertami lekcji")
 @RestController
 @RequestMapping("/api/lesson-offers")
 @RequiredArgsConstructor
