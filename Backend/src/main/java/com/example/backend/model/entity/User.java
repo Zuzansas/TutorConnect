@@ -5,13 +5,19 @@ import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Table(name = "users")
 public class User {
@@ -33,8 +39,8 @@ public class User {
 
     private String avatarURL;
 
-    @Column(length = 100)
-    private String city;
+    @Column(columnDefinition = "TEXT")
+    private String bio;
 
     @Column(precision = 10, scale = 8)
     private BigDecimal latitude;
@@ -42,16 +48,28 @@ public class User {
     @Column(precision = 11, scale = 8)
     private BigDecimal longitude;
 
+    @Column(length = 100)
+    private String city;
+
+    @Min(0)
+    @Max(5)
+    @Column(precision = 3, scale = 2)
+    @Builder.Default
+    private BigDecimal rating = BigDecimal.ZERO;
+
+    @Builder.Default
+    private Integer totalExchanges = 0;
+
     @Builder.Default
     private Boolean validatedEmail = false;
 
     @Builder.Default
     private Boolean admin = false;
 
-    private Instant createdAt;
-
     @Builder.Default
     private Boolean active = true;
+
+    private Instant createdAt;
 
     private Instant lastActiveAt;
 
@@ -61,5 +79,4 @@ public class User {
             lastActiveAt = Instant.now();
         }
     }
-
 }

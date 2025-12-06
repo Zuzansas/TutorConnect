@@ -18,10 +18,14 @@ public class MeResponse {
     private String fullName;
 
     private String avatarUrl;
+    private String bio;
 
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String city;
+
+    private BigDecimal rating;
+    private Integer totalExchanges;
 
     private Boolean verifiedEmail;
 }
