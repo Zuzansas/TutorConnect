@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -14,13 +15,12 @@ import java.util.UUID;
 @Builder
 public class PublicUserProfileResponse {
     private UUID id;
-    private String phoneNumber;
-    private String email;
     private String fullName;
     private String avatarUrl;
-
+    private String bio;
     private String city;
-
+    private BigDecimal rating;
+    private Integer totalExchanges;
     private Instant lastActiveAt;
     private Boolean verifiedEmail;
 }

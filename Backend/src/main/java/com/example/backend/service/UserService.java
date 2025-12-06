@@ -3,15 +3,22 @@ package com.example.backend.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.example.backend.model.entity.User;
+import com.example.backend.model.exception.AuthException;
 import com.example.backend.model.exception.BadRequestException;
 import com.example.backend.model.exception.NotFoundException;
+import com.example.backend.model.request.ChangeEmailRequest;
+import com.example.backend.model.request.ChangePasswordRequest;
 import com.example.backend.model.request.UpdateLocationRequest;
 import com.example.backend.model.request.UpdateProfileRequest;
 import com.example.backend.model.response.AvatarUploadResponse;
+import com.example.backend.model.response.ChangeEmailResponse;
+import com.example.backend.model.response.ChangePasswordResponse;
 import com.example.backend.model.response.LocationUpdateResponse;
 import com.example.backend.model.response.MeResponse;
 import com.example.backend.model.response.PublicUserProfileResponse;
 import com.example.backend.repository.UserRepository;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +31,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
     private final GeocodingService geocodingService;
+    private final PasswordEncoder passwordEncoder;
 
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
@@ -54,12 +62,14 @@ public class UserService {
         return MeResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
                 .fullName(user.getFullName())
                 .avatarUrl(user.getAvatarURL())
+                .bio(user.getBio())
                 .latitude(user.getLatitude())
                 .longitude(user.getLongitude())
                 .city(user.getCity())
+                .rating(user.getRating())
+                .totalExchanges(user.getTotalExchanges())
                 .verifiedEmail(user.getValidatedEmail())
                 .build();
     }
@@ -70,6 +80,13 @@ public class UserService {
 
         if (request.fullName() != null && !request.fullName().isBlank()) {
             user.setFullName(request.fullName());
+        }
+
+        if (request.bio() != null) {
+            if (request.bio().length() > 500) {
+                throw new BadRequestException("Bio nie może przekraczać 500 znaków");
+            }
+            user.setBio(request.bio());
         }
 
         userRepository.save(user);
@@ -150,6 +167,67 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
+    public ChangePasswordResponse changePassword(String username, ChangePasswordRequest request) {
+        User user = findUserByUsername(username);
+
+        if (!request.newPassword().equals(request.confirmNewPassword())) {
+            throw new BadRequestException("Nowe hasła nie są zgodne");
+        }
+
+        if (request.currentPassword().equals(request.newPassword())) {
+            throw new BadRequestException("Nowe hasło musi być różne od aktualnego hasła");
+        }
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new AuthException("Nieprawidłowe aktualne hasło");
+        }
+
+        String encodedPassword = passwordEncoder.encode(request.newPassword());
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
+
+        return ChangePasswordResponse.builder()
+                .message("Hasło zostało pomyślnie zmienione")
+                .build();
+    }
+
+    @Transactional
+    public ChangeEmailResponse changeEmail(String username, ChangeEmailRequest request) {
+        User user = findUserByUsername(username);
+
+        if (!request.newEmail().equals(request.confirmNewEmail())) {
+            throw new BadRequestException("Adresy e-mail nie są zgodne");
+        }
+
+        if (request.newEmail().equalsIgnoreCase(user.getEmail())) {
+            throw new BadRequestException("Nowy adres e-mail musi być różny od aktualnego");
+        }
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new AuthException("Nieprawidłowe hasło");
+        }
+
+        if (userRepository.existsByEmail(request.newEmail())) {
+            throw new BadRequestException("Podany adres e-mail jest już zajęty");
+        }
+
+        if (userRepository.existsByUsername(request.newEmail())) {
+            throw new BadRequestException("Podany adres e-mail jest już zajęty");
+        }
+
+        user.setEmail(request.newEmail());
+        user.setUsername(request.newEmail());
+        user.setValidatedEmail(false);
+        userRepository.save(user);
+
+        return ChangeEmailResponse.builder()
+                .newEmail(user.getEmail())
+                .message("Adres e-mail został zmieniony.")
+                .verifiedEmail(false)
+                .build();
+    }
+
     public PublicUserProfileResponse getPublicUserProfile(UUID userId) {
         User targetUser = findUserById(userId);
 
@@ -159,11 +237,12 @@ public class UserService {
 
         return PublicUserProfileResponse.builder()
                 .id(targetUser.getId())
-                .phoneNumber(targetUser.getPhoneNumber())
-                .email(targetUser.getEmail())
                 .fullName(targetUser.getFullName())
                 .avatarUrl(targetUser.getAvatarURL())
+                .bio(targetUser.getBio())
                 .city(targetUser.getCity())
+                .rating(targetUser.getRating())
+                .totalExchanges(targetUser.getTotalExchanges())
                 .lastActiveAt(targetUser.getLastActiveAt())
                 .verifiedEmail(targetUser.getValidatedEmail())
                 .build();
