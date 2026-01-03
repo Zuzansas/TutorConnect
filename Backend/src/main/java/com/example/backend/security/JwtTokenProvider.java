@@ -21,7 +21,7 @@ public class JwtTokenProvider {
     private String secretKey;
 
     @Value("${jwt.expiration}")
-    private long validityInMilliseconds;
+    private long validityInSeconds;
 
     private SecretKey key;
 
@@ -35,7 +35,7 @@ public class JwtTokenProvider {
         Claims claims = Jwts.claims().setSubject(user.getUsername());
 
         Date now = new Date();
-        Date validity = new Date(now.getTime() + validityInMilliseconds);
+        Date validity = new Date(now.getTime() + validityInSeconds * 1000);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -62,7 +62,7 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return !claims.getBody().getExpiration().before(new Date());
         } catch (JwtException | IllegalArgumentException e) {
-            throw new AuthException("Nieprawidłowy JWT token");
+            throw new AuthException("Nieprawidłowy JWT token: " + e.getMessage());
         }
     }
 
@@ -70,6 +70,10 @@ public class JwtTokenProvider {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
+        }
+
+        if (bearerToken != null && !bearerToken.isEmpty()) {
+            return bearerToken;
         }
         return null;
     }
