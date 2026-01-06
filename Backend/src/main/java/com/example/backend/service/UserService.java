@@ -247,4 +247,12 @@ public class UserService {
                 .verifiedEmail(targetUser.getValidatedEmail())
                 .build();
     }
+
+    public void deactivateUser(String username) {
+        User user = findUserByUsername(username);
+
+        user.setActive(false);
+
+        saveUser(user);
+    }
 }

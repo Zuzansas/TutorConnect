@@ -6,9 +6,13 @@ import com.example.backend.model.request.UpdateLessonOfferRequest;
 import com.example.backend.model.response.LessonOfferResponse;
 import com.example.backend.repository.LessonOfferRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -64,6 +68,14 @@ public class LessonOfferService {
                 .orElseThrow(() -> new RuntimeException("Oferta nie istnieje"));
 
         return toResponse(offer);
+    }
+
+    public List<LessonOfferResponse> getAllOffers() {
+        List<LessonOffer> allOffers = lessonOfferRepository.findAll();
+
+        return allOffers.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     private LessonOfferResponse toResponse(LessonOffer o) {

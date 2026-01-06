@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "LessonOffer")
 public class LessonOffer {
 
@@ -33,7 +37,8 @@ public class LessonOffer {
 
     private Integer durationMinutes;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "lesson_id", insertable = false, updatable = false)
     @ToString.Exclude
     private List<Review> reviews;
 

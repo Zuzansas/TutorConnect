@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 
 import java.util.UUID;
 
@@ -24,6 +25,15 @@ import java.util.UUID;
 public class LessonOfferController {
 
     private final LessonOfferService service;
+
+    @Operation(summary = "Pobierz WSZYSTKIE oferty lekcji", description = "Zwraca pełną listę ofert bez paginacji.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista ofert została pobrana", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LessonOfferResponse.class)))
+    })
+    @GetMapping("/all")
+    public List<LessonOfferResponse> getAllOffers() {
+        return service.getAllOffers();
+    }
 
     @Operation(summary = "Utwórz nową ofertę lekcji", description = "Tworzy nową ofertę lekcji na podstawie przesłanych danych.")
     @ApiResponses(value = {
