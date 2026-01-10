@@ -19,16 +19,11 @@ public class AvailabilitySlotService {
 
     private final AvailabilitySlotRepository slotRepository;
 
-    /**
-     * Dla Admina: Tworzy nowy wolny termin.
-     */
     @Transactional
     public AvailabilitySlotResponse createSlot(AvailabilitySlotRequest request) {
         if (request.startTime().isAfter(request.endTime())) {
             throw new RuntimeException("Data rozpoczęcia musi być przed datą zakończenia");
         }
-
-        // Tu można dodać walidację, czy slot nie nakłada się na inny istniejący
 
         AvailabilitySlot slot = AvailabilitySlot.builder()
                 .startTime(request.startTime())
@@ -41,9 +36,6 @@ public class AvailabilitySlotService {
         return toResponse(slot);
     }
 
-    /**
-     * Dla Admina: Usuwa slot (np. pomyłka lub zmiana planów).
-     */
     @Transactional
     public void deleteSlot(UUID id) {
         AvailabilitySlot slot = slotRepository.findById(id)
@@ -56,16 +48,12 @@ public class AvailabilitySlotService {
         slotRepository.delete(slot);
     }
 
-    /**
-     * Dla Frontendu: Pobiera wolne sloty w zadanym zakresie dat.
-     */
     public List<AvailabilitySlotResponse> getFreeSlots(Instant from, Instant to) {
         return slotRepository.findFreeSlots(from, to).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
-    // Mapper
     private AvailabilitySlotResponse toResponse(AvailabilitySlot slot) {
         return AvailabilitySlotResponse.builder()
                 .id(slot.getId())
