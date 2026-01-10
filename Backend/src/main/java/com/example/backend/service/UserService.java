@@ -248,6 +248,14 @@ public class UserService {
                 .build();
     }
 
+    public void validateAdminAccess(String username) {
+        User user = findUserByUsername(username);
+
+        if (!user.isAdmin()) {
+            throw new BadRequestException("Brak uprawnień administratora do wykonania tej operacji.");
+        }
+    }
+
     public void deactivateUser(String username) {
         User user = findUserByUsername(username);
 

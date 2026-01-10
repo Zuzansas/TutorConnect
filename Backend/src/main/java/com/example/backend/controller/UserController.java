@@ -129,4 +129,14 @@ public class UserController {
                 userService.deactivateUser(userDetails.getUsername());
                 return ResponseEntity.ok("Konto zostało zdeaktywowane");
         }
+
+        @Operation(summary = "Sprawdź uprawnienia administratora", description = "Zwraca true, jeśli zalogowany użytkownik jest administratorem")
+        @GetMapping("/me/is-admin")
+        public ResponseEntity<Boolean> checkAdminStatus(@AuthenticationPrincipal UserDetails userDetails) {
+
+                var user = userService.findUserByUsername(userDetails.getUsername());
+
+                return ResponseEntity.ok(user.isAdmin());
+        }
+
 }

@@ -16,7 +16,7 @@ import com.example.backend.model.request.ReviewRequest;
 import com.example.backend.model.response.ErrorResponse;
 import com.example.backend.model.response.ReviewResponse;
 import com.example.backend.service.ReviewService;
-import com.example.backend.service.UserService; // Zakładam istnienie serwisu do pobierania Usera
+import com.example.backend.service.UserService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

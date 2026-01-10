@@ -79,4 +79,8 @@ public class User {
             lastActiveAt = Instant.now();
         }
     }
+
+    public boolean isAdmin() {
+        return Boolean.TRUE.equals(this.admin);
+    }
 }
