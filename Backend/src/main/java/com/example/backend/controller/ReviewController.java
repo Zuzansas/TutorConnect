@@ -110,6 +110,17 @@ public class ReviewController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReviewResponse>> getReviewsByUser(
+            @Parameter(description = "ID użytkownika (autora opinii)", required = true) @PathVariable UUID userId) {
+
+        List<ReviewResponse> responses = reviewService.getReviewsByUser(userId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
     private ReviewResponse mapToResponse(Review review) {
         return new ReviewResponse(
                 review.getId(),

@@ -15,4 +15,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
     @Query("SELECT r FROM Reservation r WHERE r.status = :status AND r.startTime <= :threshold")
     List<Reservation> findUnpaidUpcoming(@Param("status") ReservationStatus status,
             @Param("threshold") Instant threshold);
+
+    boolean existsByStudentIdAndLessonOfferIdAndStatus(
+            UUID studentId,
+            UUID lessonOfferId,
+            ReservationStatus status);
 }
