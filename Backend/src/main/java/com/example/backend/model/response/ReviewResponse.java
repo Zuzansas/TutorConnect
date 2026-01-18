@@ -4,10 +4,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record ReviewResponse(
-        Long id,
-        UUID reviewerId,
-        String authorName,
-        String message,
-        Integer rating,
-        Instant createdAt) {
+                Long id,
+                UUID reviewerId,
+                String authorName,
+                String message,
+                Integer rating,
+                Instant createdAt) {
 }

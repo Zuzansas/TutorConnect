@@ -62,7 +62,9 @@ public class ReviewController {
         newReview.setMessage(request.message());
         newReview.setRating(request.rating());
 
-        Review savedReview = reviewService.createReview(newReview, author);
+        newReview.setReviewer(author);
+
+        Review savedReview = reviewService.createReview(newReview);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(mapToResponse(savedReview));
@@ -111,8 +113,8 @@ public class ReviewController {
     private ReviewResponse mapToResponse(Review review) {
         return new ReviewResponse(
                 review.getId(),
-                review.getReviewerId(),
-                review.getAuthor(),
+                review.getReviewer().getId(),
+                review.getReviewer().getFullName(),
                 review.getMessage(),
                 review.getRating(),
                 review.getCreatedAt());

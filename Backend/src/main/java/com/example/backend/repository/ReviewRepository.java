@@ -13,8 +13,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     List<Review> findByReviewerId(java.util.UUID reviewerId);
 
-    List<Review> findByReviewedLessonId(UUID reviewedLessonId);
-
     boolean existsByReviewerIdAndReviewedLessonId(UUID reviewerId, UUID reviewedLessonId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "reviewer" })
+    List<Review> findAll();
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "reviewer" })
+    List<Review> findByReviewedLessonId(java.util.UUID reviewedLessonId);
 
 }

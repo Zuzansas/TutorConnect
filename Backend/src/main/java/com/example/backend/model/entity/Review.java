@@ -21,14 +21,13 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "reviewer_id", nullable = false)
-    private UUID reviewerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewer_id", nullable = false)
+    @ToString.Exclude
+    private User reviewer;
 
     @Column(name = "lesson_id", nullable = false)
     private UUID reviewedLessonId;
-
-    @Column(name = "author")
-    private String author;
 
     @Column(name = "message")
     private String message;

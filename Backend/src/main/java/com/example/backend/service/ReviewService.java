@@ -16,9 +16,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     @Transactional
-    public Review createReview(Review review, User author) {
-        review.setReviewerId(author.getId());
-        review.setAuthor(author.getFullName());
+    public Review createReview(Review review) {
         return reviewRepository.save(review);
     }
 
@@ -28,7 +26,7 @@ public class ReviewService {
                 .orElseThrow(() -> new RuntimeException("Opinia o podanym ID nie istnieje."));
 
         boolean isAdmin = currentUser.getAdmin();
-        boolean isAuthor = review.getReviewerId().equals(currentUser.getId());
+        boolean isAuthor = review.getReviewer().getId().equals(currentUser.getId());
 
         if (isAdmin || isAuthor) {
             reviewRepository.delete(review);
