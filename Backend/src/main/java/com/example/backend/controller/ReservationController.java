@@ -4,6 +4,7 @@ import com.example.backend.model.entity.Reservation;
 import com.example.backend.model.entity.User;
 import com.example.backend.model.request.CreateReservationRequest;
 import com.example.backend.model.response.ErrorResponse;
+import com.example.backend.model.response.LessonMaterialResponse;
 import com.example.backend.model.response.ReservationResponse;
 import com.example.backend.service.ReservationService;
 import com.example.backend.service.UserService;
@@ -17,8 +18,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+
+import com.example.backend.service.LessonMaterialService;
+import org.springframework.web.bind.annotation.RequestPart;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,7 +34,7 @@ import java.util.UUID;
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
-
+        private final LessonMaterialService lessonMaterialService;
         private final ReservationService reservationService;
         private final UserService userService;
 
@@ -84,6 +91,36 @@ public class ReservationController {
                 reservationService.cancelByTutor(id);
 
                 return ResponseEntity.noContent().build();
+        }
+
+        @Operation(summary = "Dodaj materiały do lekcji (Tylko Tutor/Admin)", description = "Pozwala wgrać plik z materiałami do zakończonej rezerwacji.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Materiał dodany", content = @Content(schema = @Schema(implementation = LessonMaterialResponse.class))),
+                        @ApiResponse(responseCode = "403", description = "Brak uprawnień"),
+                        @ApiResponse(responseCode = "400", description = "Błąd pliku")
+        })
+        @PostMapping(value = "/{id}/materials", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ResponseEntity<LessonMaterialResponse> addMaterial(
+                        @PathVariable UUID id,
+                        @RequestPart("file") MultipartFile file,
+                        @RequestParam("title") String title,
+                        @RequestParam(value = "description", required = false) String description,
+                        Principal principal) {
+
+                LessonMaterialResponse response = lessonMaterialService.addMaterial(id, principal.getName(), file,
+                                title, description);
+                return ResponseEntity.ok(response);
+        }
+
+        @Operation(summary = "Pobierz materiały do lekcji", description = "Zwraca listę materiałów dla danej rezerwacji. Dostępne dla ucznia (uczestnika) i tutora.")
+        @GetMapping("/{id}/materials")
+        public ResponseEntity<List<LessonMaterialResponse>> getMaterials(
+                        @PathVariable UUID id,
+                        Principal principal) {
+
+                List<LessonMaterialResponse> response = lessonMaterialService.getMaterialsForReservation(id,
+                                principal.getName());
+                return ResponseEntity.ok(response);
         }
 
         private ReservationResponse toResponse(Reservation r) {
