@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.model.entity.Reservation;
 import com.example.backend.model.entity.User;
+import com.example.backend.model.enums.ReservationStatus;
 import com.example.backend.model.request.CreateReservationRequest;
 import com.example.backend.model.response.ErrorResponse;
 import com.example.backend.model.response.LessonMaterialResponse;
@@ -22,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
 
 import com.example.backend.service.LessonMaterialService;
-import org.springframework.web.bind.annotation.RequestPart;
 
 import java.security.Principal;
 import java.util.List;
@@ -120,6 +120,23 @@ public class ReservationController {
 
                 List<LessonMaterialResponse> response = lessonMaterialService.getMaterialsForReservation(id,
                                 principal.getName());
+                return ResponseEntity.ok(response);
+        }
+
+        @Operation(summary = "Pobierz rezerwacje", description = "Pobiera listę rezerwacji. Jeśli jesteś Adminem - widzisz wszystkie. Jeśli Studentem - widzisz tylko swoje.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista pobrana pomyślnie", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReservationResponse.class)))
+        })
+        @GetMapping
+        public ResponseEntity<List<ReservationResponse>> getReservations(
+                        Principal principal) {
+
+                List<Reservation> reservations = reservationService.getReservations(principal.getName());
+
+                List<ReservationResponse> response = reservations.stream()
+                                .map(this::toResponse)
+                                .toList();
+
                 return ResponseEntity.ok(response);
         }
 

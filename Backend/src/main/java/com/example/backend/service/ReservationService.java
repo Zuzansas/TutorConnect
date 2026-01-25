@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -20,6 +21,7 @@ public class ReservationService {
     private final AvailabilitySlotRepository slotRepository;
     private final LessonOfferRepository offerRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     private static final long CANCELLATION_DEADLINE_HOURS = 48;
 
@@ -107,6 +109,17 @@ public class ReservationService {
             cancelReservationLogic(res);
             System.out.println("Automatycznie anulowano nieopłaconą rezerwację ID: " + res.getId());
         }
+    }
+
+    public List<Reservation> getReservations(String username) {
+        User user = userService.findUserByUsername(username);
+
+        if (user.isAdmin()) {
+            return reservationRepository.findAllByOrderByStartTimeDesc();
+        }
+
+        return reservationRepository.findAllByStudentIdOrderByStartTimeDesc(user.getId());
+
     }
 
 }
