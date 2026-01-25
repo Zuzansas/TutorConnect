@@ -1,0 +1,124 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 100px 20px;
+    overflow: hidden;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    margin-bottom: 120px;
+}
+
+.row:last-child {
+    margin-bottom: 0;
+}
+
+
+.textBlock {
+    flex: 1;
+    position: relative;
+    background: linear-gradient(145deg, #ffffff 0%, #f0f7ff 100%);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid #e1efff;
+    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.03);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.row:hover .textBlock {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 123, 255, 0.08);
+}
+
+.textBlock::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20px;
+    bottom: 20px;
+    width: 4px;
+    background: linear-gradient(to bottom, #4da6ff, #007bff);
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+
+.imageBlock {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.imageBlock::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    right: -20px;
+    width: 100%;
+    height: 100%;
+    background-color: #e6f4ff;
+    border-radius: 20px;
+    z-index: -1;
+    transition: transform 0.3s ease;
+}
+
+.reversed {
+    flex-direction: row-reverse;
+}
+
+.reversed .imageBlock::after {
+    right: auto;
+    left: -20px;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    padding-left: 10px;
+}
+
+.description {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #555;
+    padding-left: 10px;
+}
+
+.image {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column-reverse;
+        gap: 30px;
+        margin-bottom: 80px;
+    }
+
+    .reversed {
+        flex-direction: column-reverse;
+    }
+
+    .textBlock {
+        padding: 25px;
+    }
+
+    .title {
+        font-size: 24px;
+    }
+
+    .description {
+        font-size: 16px;
+    }
+}
