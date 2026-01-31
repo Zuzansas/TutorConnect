@@ -1,0 +1,92 @@
+.container {
+    max-width: 75rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem;
+}
+
+.pageTitle {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 2.5rem;
+    font-size: 2rem;
+}
+
+.offersGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.875rem;
+}
+
+.offerSection {
+    display: flex;
+    background: #ffffff;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 0.25rem 0.9375rem rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+    border: 0.0625rem solid #f0f0f0;
+}
+
+.offerSection:hover {
+    transform: translateY(-0.3125rem);
+}
+
+.imageWrapper {
+    flex: 1;
+    max-width: 18.75rem;
+    height: 12.5rem;
+}
+
+.offerImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.offerDetails {
+    flex: 2;
+    padding: 1.875rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.title {
+    font-size: 1.4rem;
+    color: #333;
+    margin: 0 0 0.625rem 0;
+}
+
+.price {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+}
+
+.viewBtn {
+    background-color: #dbe9f3;
+    color: #2c3e50;
+    border: none;
+    padding: 0.75rem 1.5625rem;
+    border-radius: 0.625rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-decoration: none;
+}
+
+.viewBtn:hover {
+    background-color: #c9dae6;
+}
+
+@media (max-width: 48rem) {
+    .offerSection {
+        flex-direction: column;
+    }
+
+    .imageWrapper {
+        max-width: 100%;
+    }
+}

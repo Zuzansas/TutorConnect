@@ -17,7 +17,9 @@ const Header = () => {
             </div>
 
             <nav className={styles.headerCenter}>
-                <a href="#classes" className={styles.navLink}><FiBookOpen className={styles.icon} /> Oferta</a>
+                <Link to="/offers" className={styles.navLink}>
+                    <FiBookOpen className={styles.icon} /> Oferta
+                </Link>
                 <a href="#teaching" className={styles.navLink}><LuGraduationCap className={styles.icon} /> Jak to działa?</a>
                 <a href="#support" className={styles.navLink}><FiHeadphones className={styles.icon} /> Kontakt</a>
             </nav>
