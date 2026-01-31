@@ -96,3 +96,18 @@
         font-weight: 500;
     }
 }
+
+.errorMsg {
+    color: #e74c3c;
+    background-color: #fdeaea;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    border: 1px solid #fadbd8;
+}
+
+.submitBtn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
