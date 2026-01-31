@@ -1,33 +1,49 @@
-.pageWrapper {
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
 
+.pageWrapper {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     background-color: #f8fafc;
-    padding: 20px;
+    padding: 1.25rem;
+    margin: 3rem 0;
 }
 
 .signupCard {
     background: white;
-    width: 50rem;
-    margin: 10rem;
-    padding: 40px;
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 40rem;
+    padding: 3rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 0.625rem 2.5rem rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
+.textareaIcon {
+    position: absolute;
+    left: 0.875rem;
+    top: 1.125rem;
+    color: #bdc3c7;
+    pointer-events: none;
+}
 
 .progressTracker {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 40px;
+    margin-bottom: 2.5rem;
 }
 
 .dot {
-    width: 12px;
-    height: 12px;
+    width: 0.75rem;
+    height: 0.75rem;
     border-radius: 50%;
     background: #eee;
     transition: 0.3s;
@@ -35,36 +51,43 @@
 
 .dot.active {
     background: #2c3e50;
-    box-shadow: 0 0 0 4px #dbe9f3;
+    box-shadow: 0 0 0 0.25rem #dbe9f3;
 }
 
 .line {
-    width: 40px;
-    height: 2px;
+    width: 2.5rem;
+    height: 0.125rem;
     background: #eee;
-    margin: 0 10px;
+    margin: 0 0.625rem;
 }
 
 .line.active {
     background: #dbe9f3;
 }
 
+.stepContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
 
 .stepContainer h3 {
+    text-align: center;
+    width: 100%;
     font-size: 1.5rem;
     color: #2c3e50;
-    margin-bottom: 24px;
-    text-align: center;
+    margin-bottom: 1.5rem;
 }
 
 .inputGroup {
     position: relative;
-    margin-bottom: 16px;
+    margin-bottom: 1rem;
 }
 
 .inputIcon {
     position: absolute;
-    left: 14px;
+    left: 0.875rem;
     top: 50%;
     transform: translateY(-50%);
     color: #bdc3c7;
@@ -74,22 +97,22 @@
 .fullInput,
 .textarea {
     width: 100%;
-    padding: 14px 14px 14px 40px;
-    border: 1.5px solid #f0f0f0;
-    border-radius: 12px;
+    padding: 0.875rem 0.875rem 0.875rem 2.5rem;
+    border: 0.09375rem solid #f0f0f0;
+    border-radius: 0.75rem;
     font-size: 1rem;
     transition: 0.2s;
 }
 
 .fullInput {
-    padding-left: 14px;
-    margin-bottom: 16px;
+    padding-left: 0.875rem;
+    margin-bottom: 1rem;
 }
 
 .textarea {
-    padding-left: 14px;
-    height: 100px;
-    margin-bottom: 16px;
+    padding-left: 2.5rem;
+    height: 6.25rem;
+    margin-bottom: 1rem;
     resize: none;
 }
 
@@ -102,11 +125,11 @@ textarea:focus {
 
 .mainBtn {
     width: 100%;
-    padding: 14px;
+    padding: 0.875rem;
     background-color: #dbe9f3;
     color: #2c3e50;
     border: none;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s;
@@ -114,26 +137,26 @@ textarea:focus {
 
 .mainBtn:hover {
     background-color: #c5ddec;
-    transform: translateY(-2px);
+    transform: translateY(-0.125rem);
 }
 
 .btnRow {
     display: flex;
-    gap: 12px;
+    gap: 0.75rem;
 }
 
 .secondaryBtn {
     flex: 1;
     background: none;
-    border: 1px solid #eee;
-    border-radius: 12px;
+    border: 0.0625rem solid #eee;
+    border-radius: 0.75rem;
     cursor: pointer;
 }
 
 .successIcon {
     font-size: 3rem;
     color: #2ecc71;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 .center {

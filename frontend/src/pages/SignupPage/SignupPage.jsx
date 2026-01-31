@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styles from './SignupPage.module.css';
-import { FaUser, FaLock, FaMapMarkerAlt, FaCheckCircle } from "react-icons/fa";
+import { FaUser, FaLock, FaMapMarkerAlt, FaCheckCircle, FaEnvelope, FaBook, FaArrowLeft } from "react-icons/fa";
 
 const SignupPage = () => {
     const [step, setStep] = useState(1);
@@ -23,6 +23,7 @@ const SignupPage = () => {
                             <input type="text" placeholder="Nazwa użytkownika" required />
                         </div>
                         <div className={styles.inputGroup}>
+                            <FaEnvelope className={styles.inputIcon} />
                             <input type="email" placeholder="Adres e-mail" required />
                         </div>
                         <div className={styles.inputGroup}>
@@ -36,14 +37,26 @@ const SignupPage = () => {
                 return (
                     <div className={styles.stepContainer}>
                         <h3>Twój profil</h3>
-                        <input type="text" placeholder="Imię i nazwisko" className={styles.fullInput} />
+                        <div className={styles.inputGroup}>
+                            <FaUser className={styles.inputIcon} />
+                            <input type="text" placeholder="Imię i nazwisko" />
+                        </div>
+
                         <div className={styles.inputGroup}>
                             <FaMapMarkerAlt className={styles.inputIcon} />
                             <input type="text" placeholder="Miasto" />
                         </div>
-                        <textarea placeholder="Twoje Bio..." className={styles.textarea}></textarea>
+                        <div className={styles.inputGroup}>
+                            <FaBook className={styles.textareaIcon} style={{ color: '#bdc3c7' }} />
+                            <textarea
+                                name="bio"
+                                placeholder="Twoje Bio..."
+                                className={styles.textarea}
+                                value={formData.bio}
+                                style={{ paddingLeft: '2.5rem' }}
+                            ></textarea>
+                        </div>
                         <div className={styles.btnRow}>
-                            <button className={styles.secondaryBtn} onClick={prevStep}>Wróć</button>
                             <button className={styles.mainBtn} onClick={nextStep}>Ostatni krok</button>
                         </div>
                     </div>
@@ -64,6 +77,7 @@ const SignupPage = () => {
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.signupCard}>
+                <FaArrowLeft className={styles.backIcon} onClick={prevStep} style={{ visibility: step === 1 ? 'hidden' : 'visible', color: '#bdc3c7' }} />
                 <div className={styles.progressTracker}>
                     <div className={`${styles.dot} ${step >= 1 ? styles.active : ''}`}></div>
                     <div className={`${styles.line} ${step >= 2 ? styles.active : ''}`}></div>
