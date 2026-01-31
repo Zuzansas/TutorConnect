@@ -14,16 +14,16 @@
 }
 
 
+
 .headerLeft {
     display: flex;
     align-items: center;
 }
 
-.logo {
-    font-weight: 800;
-    font-size: 20px;
-    letter-spacing: 1px;
-    margin-right: 20px;
+.logoImage {
+    width: auto;
+    height: 3rem;
+    margin-right: 1rem;
 }
 
 .separator {

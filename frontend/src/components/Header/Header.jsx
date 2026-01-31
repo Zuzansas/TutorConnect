@@ -5,6 +5,7 @@ import LoginModal from '../LoginModal/LoginModal';
 import { FiBookOpen, FiHeadphones, FiUser, FiLogOut, FiSettings } from "react-icons/fi";
 import { LuGraduationCap } from "react-icons/lu";
 import { FaArrowRight, FaChevronDown } from "react-icons/fa6";
+import LogoSigmaSchool from '../../assets/LogoSigmaSchool.png';
 
 const Header = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +29,8 @@ const Header = () => {
     return (
         <header className={styles.header}>
             <div className={styles.headerLeft}>
-                <Link to="/" className={styles.logo}>LOGO</Link>
+                <Link to="/" className={styles.logo}><img src={LogoSigmaSchool} alt="Logo Sigma School" className={styles.logoImage} />
+                </Link>
                 <div className={styles.separator}></div>
             </div>
 
