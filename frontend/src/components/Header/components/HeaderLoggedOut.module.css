@@ -1,0 +1,25 @@
+.btnLogin {
+    background: none;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btnSignup {
+    background-color: #e6f4ff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: #2c3e50;
+}
+
+.btnSignup:hover {
+    background-color: #dbe9f3;
+}

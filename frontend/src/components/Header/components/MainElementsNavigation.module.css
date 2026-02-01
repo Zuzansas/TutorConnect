@@ -1,0 +1,41 @@
+.headerLeft {
+    display: flex;
+    align-items: center;
+}
+
+.logoImage {
+    width: auto;
+    height: 3rem;
+    margin-right: 1rem;
+}
+
+.separator {
+    width: 1px;
+    height: 25px;
+    background-color: #ddd;
+}
+
+.headerCenter {
+    display: flex;
+    gap: 30px;
+}
+
+.navLink {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    font-size: 15px;
+    transition: color 0.2s;
+}
+
+.navLink:hover {
+    color: #666;
+}
+
+.icon {
+    margin-right: 8px;
+    font-size: 18px;
+    color: #777;
+}
