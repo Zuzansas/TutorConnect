@@ -1,6 +1,6 @@
-import React from 'react';
 import styles from './OfferDetailsPage.module.css';
-import { FiClock, FiMapPin, FiCheckCircle, FiInfo } from "react-icons/fi";
+import MainInfo from './components/MainInfo';
+import PriceInfo from './components/PriceInfo';
 
 const OfferDetailsPage = () => {
     const offer = {
@@ -22,45 +22,8 @@ const OfferDetailsPage = () => {
     return (
         <div className={styles.wrapper}>
             <div className={styles.container}>
-                <div className={styles.mainContent}>
-                    <img src={offer.image} alt={offer.title} className={styles.mainImage} />
-
-                    <h1 className={styles.title}>{offer.title}</h1>
-
-                    <div className={styles.section}>
-                        <h3><FiInfo className={styles.icon} /> Opis oferty</h3>
-                        <p>{offer.description}</p>
-                    </div>
-
-                    <div className={styles.section}>
-                        <h3><FiClock className={styles.icon} /> Przebieg zajęć</h3>
-                        <ul className={styles.workflowList}>
-                            {offer.workflow.map((item, index) => (
-                                <li key={index}><FiCheckCircle className={styles.check} /> {item}</li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className={styles.section}>
-                        <h3>O mnie</h3>
-                        <p>{offer.aboutTeacher}</p>
-                    </div>
-                </div>
-                <aside className={styles.sidebar}>
-                    <div className={styles.priceCard}>
-                        <div className={styles.priceTag}>
-                            <span className={styles.amount}>{offer.price}</span>
-                            <span className={styles.unit}>{offer.unit}</span>
-                        </div>
-
-                        <div className={styles.infoRow}>
-                            <FiMapPin /> <span>{offer.location}</span>
-                        </div>
-
-                        <button className={styles.contactBtn}>Zarezerwuj termin</button>
-                        <p className={styles.hint}>Odpowiada zazwyczaj w ciągu 2h</p>
-                    </div>
-                </aside>
+                <MainInfo offer={offer} />
+                <PriceInfo pricePerHour={offer.price} location={offer.location} />
             </div>
         </div>
     );
