@@ -1,29 +1,56 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import styles from './OfferDetailsPage.module.css';
 import MainInfo from './components/MainInfo';
 import PriceInfo from './components/PriceInfo';
 
 const OfferDetailsPage = () => {
-    const offer = {
-        title: "Korepetycje z Matematyki - Poziom Rozszerzony",
-        price: "80 PLN",
-        unit: "za 60 minut",
-        location: "Łódź / Online",
-        description: "Zapraszam na profesjonalne korepetycje z matematyki. Skupiamy się na przygotowaniu do matury rozszerzonej oraz bieżącym materiale szkolnym. Tłumaczę zagadnienia w sposób prosty i logiczny, bez zbędnego wkuwania wzorów.",
-        workflow: [
-            "Analiza braków i wspólne ustalenie planu nauki.",
-            "Praca na autentycznych arkuszach maturalnych.",
-            "Dostęp do autorskich notatek i zadań domowych.",
-            "Stały kontakt na WhatsApp w razie problemów z zadaniami."
-        ],
-        aboutTeacher: "Student informatyki z 3-letnim doświadczeniem w udzielaniu korepetycji. Laureat olimpiad matematycznych.",
-        image: "https://images.unsplash.com/photo-1509228468518-180dd48a579a?q=80&w=1000"
+    const { id } = useParams();
+    const [offer, setOffer] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchOfferDetails = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch(`http://localhost:8080/api/lesson-offers/${id}`);
+
+                if (!response.ok) {
+                    throw new Error('Nie udało się pobrać szczegółów oferty');
+                }
+
+                const data = await response.json();
+                setOffer(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchOfferDetails();
+    }, [id]);
+
+    if (isLoading) return <div className={styles.loader}>Ładowanie szczegółów...</div>;
+    if (error) return <div className={styles.error}>{error}</div>;
+    if (!offer) return <div className={styles.error}>Oferta nie została znaleziona.</div>;
+
+    const mappedOffer = {
+        ...offer,
+        image: offer.imageUrl,
+        workflow: offer.courseSteps,
+        unit: `za ${offer.durationMinutes} minut`
     };
 
     return (
         <div className={styles.wrapper}>
             <div className={styles.container}>
-                <MainInfo offer={offer} />
-                <PriceInfo pricePerHour={offer.price} location={offer.location} />
+                <MainInfo offer={mappedOffer} />
+                <PriceInfo
+                    pricePerHour={offer.price}
+                    duration={offer.durationMinutes}
+                />
             </div>
         </div>
     );

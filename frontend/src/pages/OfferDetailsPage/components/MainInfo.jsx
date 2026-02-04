@@ -22,11 +22,6 @@ const MainInfo = ({ offer }) => {
                     ))}
                 </ul>
             </div>
-
-            <div className={styles.section}>
-                <h3>O mnie</h3>
-                <p>{offer.aboutTeacher}</p>
-            </div>
         </div>
     );
 }
