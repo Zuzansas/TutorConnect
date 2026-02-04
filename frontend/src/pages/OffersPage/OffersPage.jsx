@@ -52,7 +52,7 @@ const OffersPage = () => {
                 {offers.map((offer) => (
                     <section key={offer.id} className={styles.offerSection}>
                         <div className={styles.imageWrapper}>
-                            <img src={offer.image} alt={offer.title} className={styles.offerImage} />
+                            <img src={offer.imageUrl} alt={offer.title} className={styles.offerImage} />
                         </div>
                         <div className={styles.offerDetails}>
                             <h2 className={styles.title}>{offer.title}</h2>

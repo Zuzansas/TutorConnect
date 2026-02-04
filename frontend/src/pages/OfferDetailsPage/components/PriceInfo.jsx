@@ -1,17 +1,18 @@
 import styles from './PriceInfo.module.css';
 import { FiMapPin } from "react-icons/fi";
 
-const PriceInfo = ({ pricePerHour, location }) => {
+const PriceInfo = ({ pricePerHour, duration }) => {
     return (
         <aside className={styles.sidebar}>
             <div className={styles.priceCard}>
                 <div className={styles.priceTag}>
                     <span className={styles.amount}>{pricePerHour}</span>
-                    <span className={styles.unit}>PLN / 60 min</span>
+                    <span className={styles.unit}> {duration} min</span>
                 </div>
 
                 <div className={styles.infoRow}>
-                    <FiMapPin /> <span>{location}</span>
+                    <FiMapPin /> <span>Łódź/Online</span>
+
                 </div>
 
                 <button className={styles.contactBtn}>Zarezerwuj termin</button>
