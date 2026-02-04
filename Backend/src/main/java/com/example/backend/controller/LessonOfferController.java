@@ -13,7 +13,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 import java.util.UUID;
@@ -40,23 +45,27 @@ public class LessonOfferController {
             @ApiResponse(responseCode = "200", description = "Oferta lekcji została pomyślnie utworzona", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LessonOfferResponse.class))),
             @ApiResponse(responseCode = "400", description = "Niepoprawne dane wejściowe", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public LessonOfferResponse createOffer(
-            @Valid @RequestBody CreateLessonOfferRequest request) {
-        return service.createOffer(request);
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestParam String title,
+            @RequestParam String description,
+            @RequestParam BigDecimal price,
+            @RequestParam String level,
+            @RequestParam Integer duration,
+            @RequestParam List<String> steps) {
+        CreateLessonOfferRequest request = new CreateLessonOfferRequest(
+                title, description, level, price, duration, steps);
+        return service.createOffer(request, image);
     }
 
-    @Operation(summary = "Aktualizuj ofertę lekcji", description = "Aktualizuje istniejącą ofertę lekcji o podanym ID.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Oferta lekcji została pomyślnie zaktualizowana", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LessonOfferResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Niepoprawne dane wejściowe", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Oferta lekcji o podanym ID nie istnieje", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @PutMapping("/{id}")
+    @Operation(summary = "Aktualizuj ofertę lekcji", description = "Aktualizuje istniejącą ofertę lekcji wraz ze zdjęciem.")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public LessonOfferResponse updateOffer(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateLessonOfferRequest request) {
-        return service.updateOffer(id, request);
+            @Valid @ModelAttribute UpdateLessonOfferRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+        return service.updateOffer(id, request, image);
     }
 
     @Operation(summary = "Usuń ofertę lekcji", description = "Usuwa ofertę lekcji o podanym ID.")

@@ -24,7 +24,7 @@ public class LessonMaterialService {
 
     private final LessonMaterialRepository lessonMaterialRepository;
     private final ReservationRepository reservationRepository;
-    private final CloudinaryService cloudinaryService; // Twój istniejący serwis
+    private final CloudinaryService cloudinaryService;
     private final UserService userService;
 
     @Transactional

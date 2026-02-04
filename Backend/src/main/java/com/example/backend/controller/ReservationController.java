@@ -2,7 +2,6 @@ package com.example.backend.controller;
 
 import com.example.backend.model.entity.Reservation;
 import com.example.backend.model.entity.User;
-import com.example.backend.model.enums.ReservationStatus;
 import com.example.backend.model.request.CreateReservationRequest;
 import com.example.backend.model.response.ErrorResponse;
 import com.example.backend.model.response.LessonMaterialResponse;

@@ -5,10 +5,13 @@ import com.example.backend.model.request.CreateLessonOfferRequest;
 import com.example.backend.model.request.UpdateLessonOfferRequest;
 import com.example.backend.model.response.LessonOfferResponse;
 import com.example.backend.repository.LessonOfferRepository;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 import java.util.UUID;
@@ -19,8 +22,15 @@ import java.util.stream.Collectors;
 public class LessonOfferService {
 
     private final LessonOfferRepository lessonOfferRepository;
+    private final CloudinaryService cloudinaryService;
 
-    public LessonOfferResponse createOffer(CreateLessonOfferRequest request) {
+    @Transactional
+    public LessonOfferResponse createOffer(CreateLessonOfferRequest request, MultipartFile image) {
+        String imageUrl = null;
+
+        if (image != null && !image.isEmpty()) {
+            imageUrl = cloudinaryService.uploadImage(image, "offers");
+        }
 
         LessonOffer offer = LessonOffer.builder()
                 .title(request.title())
@@ -28,15 +38,16 @@ public class LessonOfferService {
                 .level(request.level())
                 .price(request.price())
                 .durationMinutes(request.durationMinutes())
+                .courseSteps(request.courseSteps())
+                .imageUrl(imageUrl)
                 .viewsCount(0)
                 .build();
 
         lessonOfferRepository.save(offer);
-
         return toResponse(offer);
     }
 
-    public LessonOfferResponse updateOffer(UUID id, UpdateLessonOfferRequest request) {
+    public LessonOfferResponse updateOffer(UUID id, UpdateLessonOfferRequest request, MultipartFile image) {
         LessonOffer offer = lessonOfferRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Oferta nie istnieje"));
 
@@ -48,6 +59,16 @@ public class LessonOfferService {
             offer.setLevel(request.level());
         if (request.price() != null)
             offer.setPrice(request.price());
+        if (request.courseSteps() != null) {
+            offer.getCourseSteps().clear();
+            offer.getCourseSteps().addAll(request.courseSteps());
+        }
+
+        if (image != null && !image.isEmpty()) {
+            cloudinaryService.deleteImage(offer.getImageUrl());
+            String newImageUrl = cloudinaryService.uploadImage(image, "offers");
+            offer.setImageUrl(newImageUrl);
+        }
         if (request.durationMinutes() != null)
             offer.setDurationMinutes(request.durationMinutes());
 
@@ -86,6 +107,8 @@ public class LessonOfferService {
                 o.getLevel(),
                 o.getPrice(),
                 o.getDurationMinutes(),
-                o.getViewsCount());
+                o.getViewsCount(),
+                o.getCourseSteps(),
+                o.getImageUrl());
     }
 }

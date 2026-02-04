@@ -65,7 +65,9 @@ public class SecurityConfig {
                                                                 "/swagger-ui.html")
                                                 .permitAll()
                                                 .requestMatchers(
-                                                                "/api/auth/**")
+                                                                "/api/auth/**",
+                                                                "/api/lesson-offers/all",
+                                                                "/api/lesson-offers/{id}")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(

@@ -42,6 +42,14 @@ public class LessonOffer {
     @ToString.Exclude
     private List<Review> reviews;
 
+    @ElementCollection
+    @CollectionTable(name = "lesson_offer_steps", joinColumns = @JoinColumn(name = "offer_id"))
+    @Column(name = "step")
+    private List<String> courseSteps;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "views_count", nullable = false)
     @Builder.Default
     private Integer viewsCount = 0;
