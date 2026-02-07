@@ -14,6 +14,44 @@
     margin: 3rem 0;
 }
 
+.inputWrapper {
+    width: 100%;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.inputGroup {
+    margin-bottom: 5px !important;
+    transition: border-color 0.3s;
+}
+
+.inputError {
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.2);
+}
+
+.errorLabel {
+    color: #e74c3c;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 5px;
+    text-align: left;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .signupCard {
     background: white;
     width: 100%;

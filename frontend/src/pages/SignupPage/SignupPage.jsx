@@ -11,6 +11,7 @@ const SignupPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [avatarFile, setAvatarFile] = useState(null);
+    const [errors, setErrors] = useState({});
 
     const [cityQuery, setCityQuery] = useState('');
     const [filteredCities, setFilteredCities] = useState([]);
@@ -29,6 +30,33 @@ const SignupPage = () => {
 
     const nextStep = () => setStep(prev => prev + 1);
     const prevStep = () => setStep(prev => prev - 1);
+
+    const validateStep = () => {
+        let newErrors = {};
+
+        if (step === 1) {
+            if (!formData.fullName.trim()) newErrors.fullName = "Imię i nazwisko jest wymagane";
+            if (!formData.email.includes('@')) newErrors.email = "Podaj poprawny adres e-mail";
+            if (formData.password.length < 8) newErrors.password = "Hasło musi mieć min. 8 znaków";
+            if (formData.password !== formData.repeatedPassword) newErrors.repeatedPassword = "Hasła nie są identyczne";
+        }
+
+        if (step === 2) {
+            if (formData.bio && formData.bio.length > 500) newErrors.bio = "Bio może mieć max 500 znaków";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+
+    const handleNextStep = () => {
+        if (validateStep()) {
+            nextStep();
+        }
+    };
+
+
     const allPolishCities = City.getCitiesOfCountry('PL').map(c => c.name);
     const handleCityChange = (e) => {
         const value = e.target.value;
@@ -100,10 +128,13 @@ const SignupPage = () => {
             });
             const result = await response.json();
 
-            if (response.ok) {
-                nextStep();
-            } else {
-                setErrorMessage(result.message || 'Błąd rejestracji. Sprawdź dane.');
+            if (!response.ok) {
+                if (result.message.includes("e-mail")) {
+                    setErrors({ email: "Ten adres e-mail jest już zajęty" });
+                    setStep(1);
+                } else {
+                    setErrorMessage(result.message);
+                }
             }
         } catch (error) {
             setErrorMessage('Błąd połączenia z serwerem. Upewnij się, że Backend działa.');
@@ -119,24 +150,40 @@ const SignupPage = () => {
                 return (
                     <div className={styles.stepContainer}>
                         <h3>Dane konta</h3>
-                        {errorMessage && <p className={styles.errorText}>{errorMessage}</p>}
-                        <div className={styles.inputGroup}>
-                            <FaUser className={styles.inputIcon} />
-                            <input name="fullName" type="text" placeholder="Imię i nazwisko" value={formData.fullName} onChange={handleChange} required />
+
+                        <div className={styles.inputWrapper}>
+                            <div className={`${styles.inputGroup} ${errors.fullName ? styles.inputError : ''}`}>
+                                <FaUser className={styles.inputIcon} />
+                                <input name="fullName" type="text" placeholder="Imię i nazwisko" value={formData.fullName} onChange={handleChange} />
+                            </div>
+                            {errors.fullName && <span className={styles.errorLabel}>{errors.fullName}</span>}
                         </div>
-                        <div className={styles.inputGroup}>
-                            <FaEnvelope className={styles.inputIcon} />
-                            <input name="email" type="email" placeholder="Adres e-mail" value={formData.email} onChange={handleChange} required />
+
+                        <div className={styles.inputWrapper}>
+                            <div className={`${styles.inputGroup} ${errors.email ? styles.inputError : ''}`}>
+                                <FaEnvelope className={styles.inputIcon} />
+                                <input name="email" type="email" placeholder="Adres e-mail" value={formData.email} onChange={handleChange} />
+                            </div>
+                            {errors.email && <span className={styles.errorLabel}>{errors.email}</span>}
                         </div>
-                        <div className={styles.inputGroup}>
-                            <FaLock className={styles.inputIcon} />
-                            <input name="password" type="password" placeholder="Hasło (min. 8 znaków)" value={formData.password} onChange={handleChange} required />
+
+                        <div className={styles.inputWrapper}>
+                            <div className={`${styles.inputGroup} ${errors.password ? styles.inputError : ''}`}>
+                                <FaLock className={styles.inputIcon} />
+                                <input name="password" type="password" placeholder="Hasło (min. 8 znaków)" value={formData.password} onChange={handleChange} />
+                            </div>
+                            {errors.password && <span className={styles.errorLabel}>{errors.password}</span>}
                         </div>
-                        <div className={styles.inputGroup}>
-                            <FaLock className={styles.inputIcon} />
-                            <input name="repeatedPassword" type="password" placeholder="Powtórz hasło" value={formData.repeatedPassword} onChange={handleChange} required />
+
+                        <div className={styles.inputWrapper}>
+                            <div className={`${styles.inputGroup} ${errors.repeatedPassword ? styles.inputError : ''}`}>
+                                <FaLock className={styles.inputIcon} />
+                                <input name="repeatedPassword" type="password" placeholder="Powtórz hasło" value={formData.repeatedPassword} onChange={handleChange} />
+                            </div>
+                            {errors.repeatedPassword && <span className={styles.errorLabel}>{errors.repeatedPassword}</span>}
                         </div>
-                        <button className={styles.mainBtn} onClick={nextStep}>Dalej</button>
+
+                        <button className={styles.mainBtn} onClick={handleNextStep}>Dalej</button>
                     </div>
                 );
             case 2:
