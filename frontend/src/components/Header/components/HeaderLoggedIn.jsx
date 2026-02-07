@@ -29,6 +29,9 @@ const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout, isAdm
                             <Link to="/add-offer" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                                 <FaPlus /> Dodaj Ofertę
                             </Link>
+                            <Link to="/admin-calendar" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
+                                <FiSettings /> Zarządzaj Kalendarzem
+                            </Link>
                         </>
                     )}
                     <div className={styles.dropdownDivider}></div>
