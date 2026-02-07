@@ -127,42 +127,11 @@ public class UserService {
     public LocationUpdateResponse updateLocation(String username, UpdateLocationRequest request) {
         User user = findUserByUsername(username);
 
-        if (request.latitude() != null) {
-            if (request.latitude().compareTo(new BigDecimal("-90")) < 0 ||
-                    request.latitude().compareTo(new BigDecimal("90")) > 0) {
-                throw new BadRequestException("Nieprawidłowa wartość szerokości geograficznej");
-            }
-        }
-
-        if (request.longitude() != null) {
-            if (request.longitude().compareTo(new BigDecimal("-180")) < 0 ||
-                    request.longitude().compareTo(new BigDecimal("180")) > 0) {
-                throw new BadRequestException("Nieprawidłowa wartość długości geograficznej");
-            }
-        }
-
-        if (request.latitude() != null && request.longitude() != null) {
-            user.setLatitude(request.latitude());
-            user.setLongitude(request.longitude());
-
-            String cityFromCoordinates = geocodingService.getCityFromCoordinates(
-                    request.latitude(),
-                    request.longitude());
-
-            if (cityFromCoordinates != null) {
-                user.setCity(cityFromCoordinates);
-            } else {
-                user.setCity("Nieokreślone");
-            }
-        } else {
-            throw new BadRequestException("Współrzędne GPS są wymagane");
-        }
+        user.setCity(request.city());
 
         userRepository.save(user);
 
         return LocationUpdateResponse.builder()
-                .latitude(user.getLatitude())
-                .longitude(user.getLongitude())
                 .city(user.getCity())
                 .build();
     }
