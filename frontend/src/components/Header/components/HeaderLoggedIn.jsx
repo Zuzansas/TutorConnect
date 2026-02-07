@@ -1,7 +1,8 @@
 import { FaChevronDown, FaPlus } from "react-icons/fa6"
-import { FiUser, FiSettings, FiLogOut } from "react-icons/fi";
+import { FiUser, FiSettings, FiLogOut, FiCalendar } from "react-icons/fi";
 import { Link } from 'react-router-dom';
 import styles from './HeaderLoggedIn.module.css';
+
 
 const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout, isAdmin }) => {
     return (
@@ -22,6 +23,9 @@ const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout, isAdm
                     </Link>
                     <Link to="/settings" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                         <FiSettings /> Ustawienia
+                    </Link>
+                    <Link to="/reservations" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
+                        <FiCalendar /> Moje Rezerwacje
                     </Link>
                     {isAdmin && (
                         <>
