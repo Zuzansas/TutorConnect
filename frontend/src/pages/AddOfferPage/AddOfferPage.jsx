@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import styles from './AddOfferPage.module.css';
 import { FiType, FiAlignLeft, FiDollarSign, FiClock, FiLayers, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const AddOfferPage = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -12,6 +14,7 @@ const AddOfferPage = () => {
         steps: ['']
     });
     const [image, setImage] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleStepChange = (index, value) => {
         const newSteps = [...formData.steps];
@@ -30,7 +33,7 @@ const AddOfferPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setIsSubmitting(true);
         const data = new FormData();
         data.append('title', formData.title);
         data.append('description', formData.description);
@@ -52,6 +55,8 @@ const AddOfferPage = () => {
 
             if (response.ok) {
                 alert('Oferta dodana pomyślnie!');
+                setIsSubmitting(false);
+                navigate('/offers');
             } else {
                 const errorData = await response.json();
                 alert('Błąd: ' + errorData.message);
@@ -171,7 +176,7 @@ const AddOfferPage = () => {
                     )}
                 </div>
 
-                <button type="submit" className={styles.mainBtn}>Opublikuj ofertę</button>
+                <button type="submit" className={styles.mainBtn}>{isSubmitting ? 'Publikowanie...' : 'Opublikuj ofertę'}</button>
             </form>
         </div>
     );
