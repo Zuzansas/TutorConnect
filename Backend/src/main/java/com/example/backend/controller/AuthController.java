@@ -20,6 +20,8 @@ import com.example.backend.service.AuthService;
 import com.example.backend.service.RefreshTokenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 @Tag(name = "Auth", description = "API do uwierzytelniania i autoryzacji użytkowników")
 @RestController
@@ -34,9 +36,11 @@ public class AuthController {
                         @ApiResponse(responseCode = "200", description = "Użytkownik został pomyślnie zarejestrowany", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterResponse.class))),
                         @ApiResponse(responseCode = "400", description = "Błąd walidacji lub email/username już istnieje", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
         })
-        @PostMapping("/register")
-        public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
-                return ResponseEntity.ok(authService.register(request));
+        @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ResponseEntity<RegisterResponse> register(
+                        @RequestPart("request") @Valid RegisterRequest request,
+                        @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+                return ResponseEntity.ok(authService.register(request, avatar));
         }
 
         @Operation(summary = "Logowanie użytkownika", description = "Uwierzytelnia użytkownika i zwraca tokeny dostępu (access token i refresh token)")

@@ -119,7 +119,7 @@ const AddOfferPage = () => {
                 />
 
                 <ImageUpload
-                    image={image}
+                    image={null}
                     onImageChange={setImage}
                     onRemoveImage={() => setImage(null)}
                 />

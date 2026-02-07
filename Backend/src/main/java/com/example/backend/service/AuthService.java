@@ -11,6 +11,7 @@ import com.example.backend.model.response.RegisterResponse;
 import com.example.backend.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 
@@ -21,8 +22,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final CloudinaryService cloudinaryService;
 
-    public RegisterResponse register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request, MultipartFile avatar) {
         if (userService.existsByEmail(request.email())) {
             throw new AuthException("Adres e-mail jest już używany");
         }
@@ -31,11 +33,19 @@ public class AuthService {
             throw new AuthException("Hasła nie są takie same");
         }
 
+        String avatarUrl = null;
+        if (avatar != null && !avatar.isEmpty()) {
+            avatarUrl = cloudinaryService.uploadImage(avatar, "avatars");
+        }
+
         User user = User.builder()
                 .username(request.email())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .fullName(request.fullName())
+                .city(request.city())
+                .bio(request.bio())
+                .avatarURL(avatarUrl)
                 .createdAt(Instant.now()).build();
 
         userService.saveUser(user);
