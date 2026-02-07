@@ -6,6 +6,7 @@ import FeatureSection from './components/FeatureSection/FeatureSection';
 import SignupPage from './pages/SignupPage/SignupPage';
 import OffersPage from './pages/OffersPage/OffersPage';
 import OfferDetailsPage from './pages/OfferDetailsPage/OfferDetailsPage';
+import AddOfferPage from './pages/AddOfferPage/AddOfferPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/offers" element={<OffersPage />} />
           <Route path="/offer/:id" element={<OfferDetailsPage />} />
+          <Route path="/add-offer" element={<AddOfferPage />} />
         </Routes>
         <Footer />
       </div>

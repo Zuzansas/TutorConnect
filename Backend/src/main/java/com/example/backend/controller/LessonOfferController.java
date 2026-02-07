@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,6 +47,7 @@ public class LessonOfferController {
             @ApiResponse(responseCode = "400", description = "Niepoprawne dane wejściowe", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public LessonOfferResponse createOffer(
             @RequestPart(value = "image", required = false) MultipartFile image,
             @RequestParam String title,

@@ -24,14 +24,14 @@ const LoginModal = ({ isOpen, onClose }) => {
       });
 
       const data = await response.json();
-
+      console.log("Dane z serwera po zalogowaniu:", data);
       if (!response.ok) {
         throw new Error(data.message || 'Błąd logowania');
       }
 
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
-
+      localStorage.setItem('userRole', data.role);
 
       onClose();
       setEmail('');

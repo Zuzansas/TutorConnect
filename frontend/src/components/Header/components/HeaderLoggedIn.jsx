@@ -1,9 +1,9 @@
-import { FaChevronDown } from "react-icons/fa6"
+import { FaChevronDown, FaPlus } from "react-icons/fa6"
 import { FiUser, FiSettings, FiLogOut } from "react-icons/fi";
 import { Link } from 'react-router-dom';
 import styles from './HeaderLoggedIn.module.css';
 
-const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout }) => {
+const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout, isAdmin }) => {
     return (
         <div className={styles.userMenuContainer}>
             <button
@@ -23,6 +23,14 @@ const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout }) => 
                     <Link to="/settings" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                         <FiSettings /> Ustawienia
                     </Link>
+                    {isAdmin && (
+                        <>
+                            <div className={styles.dropdownDivider}></div>
+                            <Link to="/add-offer" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
+                                <FaPlus /> Dodaj Ofertę
+                            </Link>
+                        </>
+                    )}
                     <div className={styles.dropdownDivider}></div>
                     <button className={`${styles.dropdownItem} ${styles.logoutBtn}`} onClick={handleLogout}>
                         <FiLogOut /> Wyloguj się

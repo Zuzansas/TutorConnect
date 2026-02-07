@@ -57,9 +57,10 @@ public class AuthService {
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String accessToken = tokenProvider.generateToken(user);
-
+        String role = user.getAdmin() ? "ADMIN" : "USER";
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken()).build();
+                .refreshToken(refreshToken.getToken())
+                .role(role).build();
     }
 }

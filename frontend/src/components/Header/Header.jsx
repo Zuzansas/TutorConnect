@@ -12,9 +12,18 @@ const Header = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    const checkAuth = () => {
         const token = localStorage.getItem('accessToken');
+        const role = localStorage.getItem('userRole');
         setIsLoggedIn(!!token);
+        setIsAdmin(role === 'ADMIN');
+    };
+
+    useEffect(() => {
+
+        checkAuth();
     }, []);
 
     const handleLogout = () => {
@@ -34,13 +43,14 @@ const Header = () => {
                         setIsDropdownOpen={setIsDropdownOpen}
                         isDropdownOpen={isDropdownOpen}
                         handleLogout={handleLogout}
+                        isAdmin={isAdmin}
                     />
                 ) : (
                     <HeaderLoggedOut setIsModalOpen={setIsModalOpen} />
                 )}
             </div>
 
-            <LoginModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <LoginModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); checkAuth(); }} />
         </header>
     );
 };
