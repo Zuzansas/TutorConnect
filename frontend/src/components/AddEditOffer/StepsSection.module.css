@@ -1,0 +1,92 @@
+.stepsSection {
+    border: 1px solid #eee;
+    padding: 24px;
+    border-radius: 12px;
+    background-color: #fafbfc;
+}
+
+.stepsSection h3 {
+    font-size: 1.1rem;
+    margin-bottom: 18px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.stepsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.stepInputWrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.stepInputWrapper:focus-within {
+    border-color: #007bff;
+}
+
+.stepNumber {
+    background: #edf2f7;
+    color: #4a5568;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.stepInputWrapper input {
+    border: none !important;
+    padding: 8px 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    flex-grow: 1;
+}
+
+.removeStepBtn {
+    background: none;
+    border: none;
+    color: #cbd5e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+}
+
+.removeStepBtn:hover {
+    color: #e53e3e;
+}
+
+.addStepBtn {
+    width: 100%;
+    padding: 10px !important;
+    background-color: transparent !important;
+    border: 2px dashed #cbd5e0 !important;
+    color: #718096 !important;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s !important;
+}
+
+.addStepBtn:hover {
+    border-color: #007bff !important;
+    color: #007bff !important;
+    background-color: #f0f7ff !important;
+}

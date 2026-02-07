@@ -1,0 +1,13 @@
+.inputWithIcon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.fieldIcon {
+    position: absolute;
+    left: 14px;
+    color: #a0aec0;
+    font-size: 1.1rem;
+    pointer-events: none;
+}

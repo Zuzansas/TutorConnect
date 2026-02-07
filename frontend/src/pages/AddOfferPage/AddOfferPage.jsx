@@ -1,10 +1,17 @@
 import { useState } from 'react';
-import styles from './AddOfferPage.module.css';
-import { FiType, FiAlignLeft, FiDollarSign, FiClock, FiLayers, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { FiType, FiAlignLeft, FiDollarSign, FiClock, FiLayers } from 'react-icons/fi';
+import styles from '../../components/AddEditOffer/MainForm.module.css';
+
+
+import FormField from '../../components/AddEditOffer/FormField';
+import StepsSection from '../../components/AddEditOffer/StepsSection';
+import ImageUpload from '../../components/AddEditOffer/ImageUpload';
 
 const AddOfferPage = () => {
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -14,26 +21,23 @@ const AddOfferPage = () => {
         steps: ['']
     });
     const [image, setImage] = useState(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+    const handleInputChange = (field, value) => setFormData({ ...formData, [field]: value });
 
     const handleStepChange = (index, value) => {
         const newSteps = [...formData.steps];
         newSteps[index] = value;
-        setFormData({ ...formData, steps: newSteps });
+        handleInputChange('steps', newSteps);
     };
 
-    const addStep = () => setFormData({ ...formData, steps: [...formData.steps, ''] });
-
-    const removeStep = (index) => {
-        if (formData.steps.length > 1) {
-            const newSteps = formData.steps.filter((_, i) => i !== index);
-            setFormData({ ...formData, steps: newSteps });
-        }
-    };
+    const addStep = () => handleInputChange('steps', [...formData.steps, '']);
+    const removeStep = (index) => handleInputChange('steps', formData.steps.filter((_, i) => i !== index));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+
         const data = new FormData();
         data.append('title', formData.title);
         data.append('description', formData.description);
@@ -47,15 +51,12 @@ const AddOfferPage = () => {
             const token = localStorage.getItem('accessToken');
             const response = await fetch('http://localhost:8080/api/lesson-offers', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Authorization': `Bearer ${token}` },
                 body: data
             });
 
             if (response.ok) {
                 alert('Oferta dodana pomyślnie!');
-                setIsSubmitting(false);
                 navigate('/offers');
             } else {
                 const errorData = await response.json();
@@ -63,11 +64,9 @@ const AddOfferPage = () => {
             }
         } catch (err) {
             console.error('Błąd wysyłania:', err);
+        } finally {
+            setIsSubmitting(false);
         }
-    };
-
-    const handleRemoveImage = () => {
-        setImage(null);
     };
 
     return (
@@ -75,108 +74,59 @@ const AddOfferPage = () => {
             <h1>Dodaj nową ofertę</h1>
             <form onSubmit={handleSubmit} className={styles.form}>
 
+                <FormField icon={FiType}>
+                    <input
+                        type="text" placeholder="Tytuł oferty" required
+                        onChange={e => handleInputChange('title', e.target.value)}
+                    />
+                </FormField>
 
-                <div className={styles.inputWithIcon}>
-                    <FiType className={styles.fieldIcon} />
-                    <input type="text" placeholder="Tytuł oferty" required
-                        onChange={e => setFormData({ ...formData, title: e.target.value })} />
-                </div>
-
-
-                <div className={styles.inputWithIcon}>
-                    <FiAlignLeft className={[styles.fieldIcon, styles.iconTop].join(' ')} />
-                    <textarea placeholder="Opis oferty..." required
-                        onChange={e => setFormData({ ...formData, description: e.target.value })} />
-                </div>
+                <FormField icon={FiAlignLeft} className={styles.iconTop}>
+                    <textarea
+                        placeholder="Opis oferty..." required
+                        onChange={e => handleInputChange('description', e.target.value)}
+                    />
+                </FormField>
 
                 <div className={styles.row}>
-
-                    <div className={styles.inputWithIcon}>
-                        <FiDollarSign className={styles.fieldIcon} />
-                        <input type="number" placeholder="Cena (PLN)" required
-                            onChange={e => setFormData({ ...formData, price: e.target.value })} />
-                    </div>
-
-                    <div className={styles.inputWithIcon}>
-                        <FiClock className={styles.fieldIcon} />
-                        <input type="number" placeholder="Czas (min)" required
-                            onChange={e => setFormData({ ...formData, duration: e.target.value })} />
-                    </div>
+                    <FormField icon={FiDollarSign}>
+                        <input
+                            type="number" placeholder="Cena (PLN)" required
+                            onChange={e => handleInputChange('price', e.target.value)}
+                        />
+                    </FormField>
+                    <FormField icon={FiClock}>
+                        <input
+                            type="number" placeholder="Czas (min)" required
+                            onChange={e => handleInputChange('duration', e.target.value)}
+                        />
+                    </FormField>
                 </div>
 
-
-                <div className={styles.inputWithIcon}>
-                    <FiLayers className={styles.fieldIcon} />
-                    <select onChange={e => setFormData({ ...formData, level: e.target.value })}>
+                <FormField icon={FiLayers}>
+                    <select onChange={e => handleInputChange('level', e.target.value)}>
                         <option value="Podstawowy">Poziom Podstawowy</option>
                         <option value="Średni">Poziom Średniozaawansowany</option>
                         <option value="Rozszerzony">Poziom Rozszerzony/Matura</option>
                     </select>
-                </div>
+                </FormField>
 
+                <StepsSection
+                    steps={formData.steps}
+                    onStepChange={handleStepChange}
+                    onAddStep={addStep}
+                    onRemoveStep={removeStep}
+                />
 
-                <div className={styles.stepsWrapper}>
-                    <h3 className={styles.sectionTitle}><FiPlus style={{ marginRight: '8px' }} /> Kroki współpracy</h3>
-                    <div className={styles.stepsSection}>
-                        <div className={styles.stepsList}>
-                            {formData.steps.map((step, index) => (
-                                <div key={index} className={styles.stepInputWrapper}>
-                                    <span className={styles.stepNumber}>{index + 1}</span>
-                                    <input
-                                        value={step}
-                                        placeholder="Opisz ten krok..."
-                                        onChange={e => handleStepChange(index, e.target.value)}
-                                        required
-                                    />
-                                    {formData.steps.length > 1 && (
-                                        <button type="button" onClick={() => removeStep(index)} className={styles.removeStepBtn}>
-                                            <FiTrash2 />
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        <button type="button" onClick={addStep} className={styles.addStepBtn}>
-                            + Dodaj kolejny krok
-                        </button>
-                    </div>
-                </div>
+                <ImageUpload
+                    image={image}
+                    onImageChange={setImage}
+                    onRemoveImage={() => setImage(null)}
+                />
 
-                <div className={styles.fileInputSection}>
-                    <label className={styles.fileLabel}><FiImage style={{ marginRight: '8px' }} /> Zdjęcie oferty</label>
-                    {!image ? (
-                        <div className={styles.uploadPlaceholder}>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={e => setImage(e.target.files[0])}
-                                id="file-upload"
-                                className={styles.hiddenInput}
-                            />
-                            <label htmlFor="file-upload" className={styles.uploadBox}>
-                                <span>+ Wybierz zdjęcie</span>
-                                <small>Formaty: JPG, PNG, WEBP</small>
-                            </label>
-                        </div>
-                    ) : (
-                        <div className={styles.imagePreviewContainer}>
-                            <img
-                                src={URL.createObjectURL(image)}
-                                alt="Podgląd"
-                                className={styles.imagePreview}
-                            />
-                            <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className={styles.removeImageBtn}
-                            >
-                                Zmień zdjęcie
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                <button type="submit" className={styles.mainBtn}>{isSubmitting ? 'Publikowanie...' : 'Opublikuj ofertę'}</button>
+                <button type="submit" className={styles.mainBtn} disabled={isSubmitting}>
+                    {isSubmitting ? 'Publikowanie...' : 'Opublikuj ofertę'}
+                </button>
             </form>
         </div>
     );
