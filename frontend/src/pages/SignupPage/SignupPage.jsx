@@ -163,7 +163,6 @@ const SignupPage = () => {
                             />
                         </div>
 
-
                         <div className={styles.inputGroup} style={{ position: 'relative' }}>
                             <FaMapMarkerAlt className={styles.inputIcon} />
                             <input
@@ -186,10 +185,6 @@ const SignupPage = () => {
                             )}
                         </div>
 
-
-
-
-
                         <div className={styles.inputGroup}>
                             <FaBook className={styles.textareaIcon} style={{ color: '#bdc3c7' }} />
                             <textarea
@@ -210,11 +205,11 @@ const SignupPage = () => {
                 );
             case 3:
                 return (
-                    <div className={styles.stepContainer + ' ' + styles.center}>
+                    <div className={styles.stepContainer} style={{ textAlign: 'center', alignItems: 'center' }}>
                         <FaCheckCircle className={styles.successIcon} />
                         <h3>Gotowe!</h3>
                         <p>Twoje konto zostało utworzone. Możesz teraz przejść do logowania.</p>
-                        <button className={styles.mainBtn} onClick={() => navigate('/')}>Przejdź do logowania</button>
+                        <button className={styles.mainBtn} onClick={() => navigate('/')}>Przejdź do strony głównej</button>
                     </div>
                 );
             default: return null;

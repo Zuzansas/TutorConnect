@@ -159,9 +159,6 @@ textarea:focus {
     margin-bottom: 1.25rem;
 }
 
-.center {
-    text-align: center;
-}
 
 .suggestionsList {
     position: absolute;
