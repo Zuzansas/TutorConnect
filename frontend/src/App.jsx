@@ -7,6 +7,8 @@ import SignupPage from './pages/SignupPage/SignupPage';
 import OffersPage from './pages/OffersPage/OffersPage';
 import OfferDetailsPage from './pages/OfferDetailsPage/OfferDetailsPage';
 import AddOfferPage from './pages/AddOfferPage/AddOfferPage';
+import EditOfferPage from './pages/EditOfferPage/EditOfferPage';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx';
 
 function App() {
   return (
@@ -19,6 +21,7 @@ function App() {
           <Route path="/offers" element={<OffersPage />} />
           <Route path="/offer/:id" element={<OfferDetailsPage />} />
           <Route path="/add-offer" element={<AddOfferPage />} />
+          <Route path="/edit-offer/:id" element={<ProtectedRoute><EditOfferPage /></ProtectedRoute>} />
         </Routes>
         <Footer />
       </div>

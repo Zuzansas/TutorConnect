@@ -1,0 +1,302 @@
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.container h1 {
+    text-align: center;
+    width: 100%;
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+}
+
+
+.inputWithIcon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.fieldIcon {
+    position: absolute;
+    left: 14px;
+    color: #a0aec0;
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.iconTop {
+    top: 15px;
+}
+
+
+.stepContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sectionTitle {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    color: #2d3748;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+
+.form input[type="text"],
+.form input[type="number"],
+.form textarea,
+.form select {
+    padding: 12px 16px 12px 42px;
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+
+.form input:focus,
+.form textarea:focus,
+.form select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/*Step section*/
+
+.stepsSection {
+    border: 1px solid #eee;
+    padding: 24px;
+    border-radius: 12px;
+    background-color: #fafbfc;
+}
+
+.stepsSection h3 {
+    font-size: 1.1rem;
+    margin-bottom: 18px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.stepsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.stepInputWrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.stepInputWrapper:focus-within {
+    border-color: #007bff;
+}
+
+.stepNumber {
+    background: #edf2f7;
+    color: #4a5568;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.stepInputWrapper input {
+    border: none !important;
+    padding: 8px 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    flex-grow: 1;
+}
+
+.removeStepBtn {
+    background: none;
+    border: none;
+    color: #cbd5e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+}
+
+.removeStepBtn:hover {
+    color: #e53e3e;
+}
+
+.addStepBtn {
+    width: 100%;
+    padding: 10px !important;
+    background-color: transparent !important;
+    border: 2px dashed #cbd5e0 !important;
+    color: #718096 !important;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s !important;
+}
+
+.addStepBtn:hover {
+    border-color: #007bff !important;
+    color: #007bff !important;
+    background-color: #f0f7ff !important;
+}
+
+
+/*File section*/
+
+.fileInputSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+/*Also step Section*/
+.fileLabel {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.uploadBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    border: 2px dashed #cbd5e0;
+    border-radius: 12px;
+    cursor: pointer;
+    background-color: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.uploadBox:hover {
+    border-color: #007bff;
+    background-color: #f0f7ff;
+}
+
+.uploadBox span {
+    font-weight: 600;
+    color: #007bff;
+    margin-bottom: 4px;
+}
+
+.uploadBox small {
+    color: #718096;
+}
+
+.imagePreviewContainer {
+    position: relative;
+    width: 100%;
+    max-height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.imagePreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.removeImageBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background-color 0.2s;
+}
+
+.removeImageBtn:hover {
+    background-color: rgba(229, 62, 62, 0.8);
+}
+
+
+.mainBtn {
+    width: 100%;
+    padding: 0.875rem;
+    background-color: #dbe9f3;
+    color: #2c3e50;
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.mainBtn:hover {
+    background-color: #c5ddec;
+    transform: translateY(-0.125rem);
+}
+
+
+@media (max-width: 600px) {
+    .row {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        margin: 20px;
+        padding: 20px;
+    }
+}
