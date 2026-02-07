@@ -12,7 +12,13 @@ import java.util.UUID;
 public class ReservationResponse {
     private UUID id;
     private String lessonTitle;
+
     private String studentName;
+    private String studentEmail;
+    private String studentBio;
+    private String studentCity;
+    private String studentAvatarUrl;
+
     private Instant startTime;
     private Instant endTime;
     private BigDecimal price;

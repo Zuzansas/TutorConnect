@@ -30,7 +30,7 @@ const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout, isAdm
                                 <FaPlus /> Dodaj Ofertę
                             </Link>
                             <Link to="/admin-calendar" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
-                                <FiSettings /> Zarządzaj Kalendarzem
+                                <FiSettings /> Kalendarz
                             </Link>
                         </>
                     )}

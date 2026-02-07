@@ -140,10 +140,16 @@ public class ReservationController {
         }
 
         private ReservationResponse toResponse(Reservation r) {
+                User student = r.getStudent();
+
                 return ReservationResponse.builder()
                                 .id(r.getId())
                                 .lessonTitle(r.getLessonOffer().getTitle())
-                                .studentName(r.getStudent().getFullName())
+                                .studentName(student.getFullName())
+                                .studentEmail(student.getEmail())
+                                .studentBio(student.getBio())
+                                .studentCity(student.getCity() != null ? student.getCity() : "Nie podano")
+                                .studentAvatarUrl(student.getAvatarURL() != null ? student.getAvatarURL() : "")
                                 .startTime(r.getStartTime())
                                 .endTime(r.getEndTime())
                                 .price(r.getPrice())
