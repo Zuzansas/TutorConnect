@@ -11,6 +11,7 @@ import EditOfferPage from './pages/EditOfferPage/EditOfferPage';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx';
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage';
 import AdminCalendarPage from './pages/AdminCalendarPage/AdminCalendarPage';
+import BookingPage from './pages/BookingPage/BookingPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/add-offer" element={<AddOfferPage />} />
           <Route path="/edit-offer/:id" element={<ProtectedRoute><EditOfferPage /></ProtectedRoute>} />
           <Route path='/admin-calendar' element={<ProtectedRoute><AdminCalendarPage /></ProtectedRoute>} />
+          <Route path="/book/:offerId" element={<BookingPage />} />
         </Routes>
         <Footer />
       </div>

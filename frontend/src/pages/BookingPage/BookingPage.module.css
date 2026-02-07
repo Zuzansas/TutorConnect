@@ -1,0 +1,146 @@
+.bookingContainer {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #fcfaf8;
+    min-width: 60%;
+    min-height: auto;
+}
+
+.bookingCard {
+    background: white;
+    min-width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    padding: 20px;
+    border-bottom: 1px solid #f1ece8;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.titleText {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.backBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #95a5a6;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.datePicker {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #e6f4ff;
+}
+
+.currentDate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: #d28b5b;
+}
+
+.navBtn {
+    background: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #d28b5b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.slotsGrid {
+    padding: 25px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    min-height: 200px;
+}
+
+.slotBtn {
+    padding: 12px;
+    border: 1px solid #f1ece8;
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    color: #2c3e50;
+}
+
+.slotBtn:hover {
+    border-color: #d28b5b;
+    background: #fcfaf8;
+}
+
+.slotBtn.selected {
+    background: #d28b5b;
+    color: white;
+    border-color: #d28b5b;
+    transform: scale(1.05);
+}
+
+.statusMsg {
+    grid-column: span 3;
+    text-align: center;
+    color: #95a5a6;
+    padding-top: 40px;
+}
+
+.footer {
+    padding: 20px;
+    border-top: 1px solid #f1ece8;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selectionInfo p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.confirmBtn {
+    background: #d28b5b;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.confirmBtn:disabled {
+    background: #e0c8b8;
+    cursor: not-allowed;
+}
+
+.confirmBtn:not(:disabled):hover {
+    background: #b8764a;
+    transform: translateY(-2px);
+}

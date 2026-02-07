@@ -50,6 +50,7 @@ const OfferDetailsPage = () => {
                 <PriceInfo
                     pricePerHour={offer.price}
                     duration={offer.durationMinutes}
+                    offerId={offer.id}
                 />
             </div>
         </div>
