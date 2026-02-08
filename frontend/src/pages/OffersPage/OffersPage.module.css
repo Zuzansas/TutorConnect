@@ -1,5 +1,5 @@
 .container {
-    max-width: 75rem;
+    min-width: 70%;
     margin: 0 auto;
     padding: 2.5rem 1.25rem;
 }
@@ -13,7 +13,7 @@
     top: 10px;
     right: 10px;
     display: flex;
-    gap: 8px;
+    gap: 1rem;
     z-index: 10;
 }
 
