@@ -1,19 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ReservationsPage.module.css';
-import { FaCalendarCheck, FaRegClock, FaTrashAlt, FaFolderOpen, FaChevronDown, FaChevronUp, FaFileAlt, FaPlus } from 'react-icons/fa';
+import {
+    FaCalendarCheck,
+    FaRegClock,
+    FaTrashAlt,
+    FaFolderOpen,
+    FaChevronUp,
+    FaFileAlt,
+    FaPlus,
+    FaStar
+} from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { toast, ToastContainer } from 'react-toastify';
 
 const ReservationsPage = () => {
     const [reservations, setReservations] = useState([]);
     const [expandedRes, setExpandedRes] = useState(null);
+    const [userReviews, setUserReviews] = useState([]);
     const [materials, setMaterials] = useState({});
     const [loading, setLoading] = useState(true);
+
     const token = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
+    const userRole = localStorage.getItem('userRole');
 
     useEffect(() => {
-        fetchReservations();
+        fetchInitialData();
     }, []);
+
+    const fetchInitialData = async () => {
+        setLoading(true);
+        await Promise.all([fetchReservations(), fetchUserReviews()]);
+        setLoading(false);
+    };
 
     const fetchReservations = async () => {
         try {
@@ -25,8 +44,21 @@ const ReservationsPage = () => {
             setReservations(sorted);
         } catch (error) {
             toast.error("Nie udało się pobrać rezerwacji.");
-        } finally {
-            setLoading(false);
+        }
+    };
+
+    const fetchUserReviews = async () => {
+        if (!userId) return;
+        try {
+            const response = await fetch(`http://localhost:8080/api/reviews/user/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setUserReviews(data);
+            }
+        } catch (error) {
+            console.error("Błąd pobierania opinii:", error);
         }
     };
 
@@ -40,6 +72,80 @@ const ReservationsPage = () => {
             setMaterials(prev => ({ ...prev, [id]: data }));
         } catch (error) {
             toast.error("Błąd pobierania materiałów.");
+        }
+    };
+
+    const getExistingReview = (lessonOfferId) => {
+        return userReviews.find(r => r.reviewedLessonId === lessonOfferId);
+    };
+
+    const handleAddReview = async (res) => {
+        const { value: formValues } = await Swal.fire({
+            title: 'Oceń lekcję',
+            html: `
+                <div style="display:flex; flex-direction:column; gap:10px; text-align:left;">
+                    <label>Ocena (1-5):</label>
+                    <input type="number" id="review-rating" class="swal2-input" min="1" max="5" value="5">
+                    <label>Twoja opinia:</label>
+                    <textarea id="review-message" class="swal2-textarea" placeholder="Napisz kilka słów o zajęciach..."></textarea>
+                </div>
+            `,
+            confirmButtonColor: '#d28b5b',
+            confirmButtonText: 'Dodaj opinię',
+            preConfirm: () => ({
+                rating: document.getElementById('review-rating').value,
+                message: document.getElementById('review-message').value
+            })
+        });
+
+        if (formValues) {
+            try {
+                console.log("Przesyłam ID oferty:", res.lessonOfferId);
+                const response = await fetch('http://localhost:8080/api/reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reviewedLessonId: res.lessonOfferId,
+                        message: formValues.message,
+                        rating: parseInt(formValues.rating, 10)
+                    })
+                });
+
+                if (response.ok) {
+                    toast.success("Dziękujemy za opinię!");
+                    fetchUserReviews();
+                }
+            } catch (error) {
+                toast.error("Błąd dodawania opinii.");
+            }
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        const result = await Swal.fire({
+            title: 'Usunąć opinię?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74c3c',
+            confirmButtonText: 'Tak, usuń'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/reviews/${reviewId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    toast.success("Opinia została usunięta.");
+                    fetchUserReviews();
+                }
+            } catch (error) {
+                toast.error("Błąd usuwania opinii.");
+            }
         }
     };
 
@@ -147,55 +253,41 @@ const ReservationsPage = () => {
             }
         }
     };
-    const handleCancel = async (id) => {
-        const userRole = localStorage.getItem('userRole');
 
+    const handleCancel = async (id) => {
         const result = await Swal.fire({
-            title: 'Czy na pewno chcesz odwołać te zajęcia?',
-            text: userRole === 'ADMIN'
-                ? "Jako korepetytor odwołujesz zajęcia w trybie nagłym."
-                : "Zasada 48h: Sprawdź, czy przysługuje Ci zwrot środków.",
+            title: 'Czy na pewno?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#e74c3c',
-            confirmButtonText: 'Tak, odwołaj',
-            cancelButtonText: 'Wróć'
+            confirmButtonText: 'Tak, odwołaj'
         });
 
         if (result.isConfirmed) {
             try {
-                let response;
-                if (userRole === 'ADMIN') {
+                let url = userRole === 'ADMIN'
+                    ? `http://localhost:8080/api/reservations/${id}`
+                    : `http://localhost:8080/api/reservations/${id}/cancel`;
+                let method = userRole === 'ADMIN' ? 'DELETE' : 'POST';
 
-                    response = await fetch(`http://localhost:8080/api/reservations/${id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                } else {
-
-                    response = await fetch(`http://localhost:8080/api/reservations/${id}/cancel`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                }
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
                 if (response.ok) {
-                    toast.success("Rezerwacja została pomyślnie anulowana.");
+                    toast.success("Anulowano rezerwację.");
                     fetchReservations();
-                } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    toast.error(errorData.message || "Nie udało się anulować rezerwacji.");
                 }
             } catch (error) {
-                toast.error("Błąd połączenia z serwerem.");
+                toast.error("Błąd połączenia.");
             }
         }
     };
 
     const toggleExpand = (id) => {
-        if (expandedRes === id) {
-            setExpandedRes(null);
-        } else {
+        if (expandedRes === id) setExpandedRes(null);
+        else {
             setExpandedRes(id);
             fetchMaterials(id);
         }
@@ -213,73 +305,86 @@ const ReservationsPage = () => {
 
             <div className={styles.timeline}>
                 {reservations.length > 0 ? (
-                    reservations.map((res) => (
-                        <div key={res.id} className={`${styles.resCard} ${new Date(res.startTime) < new Date() ? styles.past : ''}`}>
-                            <div className={styles.resMain}>
-                                <div className={styles.dateInfo}>
-                                    <span className={styles.day}>{new Date(res.startTime).getDate()}</span>
-                                    <span className={styles.month}>
-                                        {new Date(res.startTime).toLocaleString('pl-PL', { month: 'short' })}
-                                    </span>
-                                </div>
+                    reservations.map((res) => {
 
-                                <div className={styles.details}>
-                                    <h3>{res.lessonTitle}</h3>
-                                    <p className={styles.time}>
-                                        <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                    <p className={styles.student}>Uczeń: <strong>{res.studentName}</strong></p>
-                                </div>
+                        const isPast = new Date(res.startTime) < new Date();
+                        const existingReview = getExistingReview(res.lessonOfferId);
 
-                                <div className={styles.statusBadge} data-status={res.status}>
-                                    {res.status}
-                                </div>
+                        return (
+                            <div key={res.id} className={`${styles.resCard} ${isPast ? styles.past : ''}`}>
+                                <div className={styles.resMain}>
+                                    <div className={styles.dateInfo}>
+                                        <span className={styles.day}>{new Date(res.startTime).getDate()}</span>
+                                        <span className={styles.month}>
+                                            {new Date(res.startTime).toLocaleString('pl-PL', { month: 'short' })}
+                                        </span>
+                                    </div>
 
-                                <div className={styles.actions}>
-                                    <button onClick={() => toggleExpand(res.id)} className={styles.materialsBtn}>
-                                        {expandedRes === res.id ? <FaChevronUp /> : <FaFolderOpen />} Materiały
-                                    </button>
-                                    {localStorage.getItem('userRole') === 'ADMIN' && (
-                                        <button
-                                            onClick={() => handleOpenMaterialsModal(res.id)}
-                                            className={styles.addBtn}
-                                            title="Dodaj materiały"
-                                        >
-                                            <FaPlus />
+                                    <div className={styles.details}>
+                                        <h3>{res.lessonTitle}</h3>
+                                        <p className={styles.time}>
+                                            <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                        <p className={styles.student}>Uczeń: <strong>{res.studentName}</strong></p>
+                                    </div>
+
+                                    <div className={styles.statusBadge} data-status={res.status}>
+                                        {res.status}
+                                    </div>
+
+                                    <div className={styles.actions}>
+                                        <button onClick={() => toggleExpand(res.id)} className={styles.materialsBtn}>
+                                            {expandedRes === res.id ? <FaChevronUp /> : <FaFolderOpen />} Materiały
                                         </button>
-                                    )}
-                                    {res.status !== 'CANCELLED' && (localStorage.getItem('userRole') === 'ADMIN' || new Date(res.startTime) > new Date()) && (
-                                        <button onClick={() => handleCancel(res.id)} className={styles.cancelBtn}>
-                                            <FaTrashAlt />
-                                        </button>
-                                    )}
+                                        {isPast && res.status === 'COMPLETED' && userRole !== 'ADMIN' && (
+                                            existingReview ? (
+                                                <button onClick={() => handleDeleteReview(existingReview.id)} className={styles.deleteReviewBtn}>
+                                                    <FaStar /> <FaTrashAlt />
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => handleAddReview(res)} className={styles.addReviewBtn}>
+                                                    <FaStar /> Oceń
+                                                </button>
+                                            )
+                                        )}
+
+
+                                        {userRole === 'ADMIN' && (
+                                            <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn}>
+                                                <FaPlus />
+                                            </button>
+                                        )}
+
+
+                                        {res.status !== 'CANCELLED' && (userRole === 'ADMIN' || !isPast) && (
+                                            <button onClick={() => handleCancel(res.id)} className={styles.cancelBtn}>
+                                                <FaTrashAlt />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {expandedRes === res.id && (
+                                    <div className={styles.expandedContent}>
+                                        <h4>Dostępne materiały:</h4>
+                                        {materials[res.id]?.length > 0 ? (
+                                            <ul className={styles.materialsList}>
+                                                {materials[res.id].map((mat, index) => (
+                                                    <li key={index}>
+                                                        <FaFileAlt />
+                                                        <a href={mat.fileUrl} target="_blank" rel="noreferrer">{mat.title}</a>
+                                                        <span>{mat.description}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : <p>Brak materiałów.</p>}
+                                    </div>
+                                )}
                             </div>
-
-                            {expandedRes === res.id && (
-                                <div className={styles.expandedContent}>
-                                    <h4>Dostępne materiały do lekcji:</h4>
-                                    {materials[res.id]?.length > 0 ? (
-                                        <ul className={styles.materialsList}>
-                                            {materials[res.id].map((mat, index) => (
-                                                <li key={index}>
-                                                    <FaFileAlt />
-                                                    <a href={mat.fileUrl} target="_blank" rel="noreferrer">{mat.title}</a>
-                                                    <span>{mat.description}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p className={styles.noMaterials}>Brak wgranych materiałów dla tej lekcji.</p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    ))
-                ) : (
-                    <div className={styles.emptyState}>Brak zarezerwowanych terminów.</div>
-                )}
+                        );
+                    })
+                ) : <div className={styles.emptyState}>Brak rezerwacji.</div>}
             </div>
         </div>
     );

@@ -1,0 +1,101 @@
+.reviewSection {
+    margin-top: 40px;
+    padding: 20px 0;
+}
+
+.sectionTitle {
+    color: #d28b5b;
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    font-weight: 700;
+}
+
+.reviewsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.reviewCard {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(210, 139, 91, 0.05);
+    border: 1px solid #f1ece8;
+    transition: transform 0.3s ease;
+}
+
+.reviewCard:hover {
+    transform: translateY(-5px);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.userIcon {
+    font-size: 2.5rem;
+    color: #e6f4ff;
+}
+
+.authorName {
+    display: block;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.date {
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.rating {
+    display: flex;
+    gap: 2px;
+}
+
+.starFilled {
+    color: #f1c40f;
+}
+
+.starEmpty {
+    color: #ecf0f1;
+}
+
+.content {
+    position: relative;
+    padding-left: 25px;
+}
+
+.quoteIcon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #e6f4ff;
+    font-size: 1rem;
+}
+
+.content p {
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+    font-style: italic;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 40px;
+    background: #fcfaf8;
+    border-radius: 15px;
+    color: #95a5a6;
+    border: 2px dashed #f1ece8;
+}

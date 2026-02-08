@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import styles from './OfferDetailsPage.module.css';
 import MainInfo from './components/MainInfo';
 import PriceInfo from './components/PriceInfo';
+import ReviewSection from './components/ReviewSection';
 
 const OfferDetailsPage = () => {
     const { id } = useParams();
@@ -46,7 +47,11 @@ const OfferDetailsPage = () => {
     return (
         <div className={styles.wrapper}>
             <div className={styles.container}>
-                <MainInfo offer={mappedOffer} />
+                <div className={styles.mainContent}>
+                    <MainInfo offer={mappedOffer} />
+                    <ReviewSection lessonId={id} />
+                </div>
+
                 <PriceInfo
                     pricePerHour={offer.price}
                     duration={offer.durationMinutes}

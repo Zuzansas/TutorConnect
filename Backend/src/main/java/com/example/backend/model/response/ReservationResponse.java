@@ -11,6 +11,7 @@ import java.util.UUID;
 @Getter
 public class ReservationResponse {
     private UUID id;
+    private UUID lessonOfferId;
     private String lessonTitle;
 
     private String studentName;

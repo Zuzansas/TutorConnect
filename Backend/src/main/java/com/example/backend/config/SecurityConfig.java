@@ -67,7 +67,8 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/auth/**",
                                                                 "/api/lesson-offers/all",
-                                                                "/api/lesson-offers/{id}")
+                                                                "/api/lesson-offers/{id}",
+                                                                "/api/reviews/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(

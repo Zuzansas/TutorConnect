@@ -144,6 +144,7 @@ public class ReservationController {
 
                 return ReservationResponse.builder()
                                 .id(r.getId())
+                                .lessonOfferId(r.getLessonOffer().getId())
                                 .lessonTitle(r.getLessonOffer().getTitle())
                                 .studentName(student.getFullName())
                                 .studentEmail(student.getEmail())
