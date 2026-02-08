@@ -2,6 +2,7 @@ import styles from './OffersPage.module.css';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
+import Swal from 'sweetalert2';
 
 const OffersPage = () => {
     const [offers, setOffers] = useState([]);
@@ -35,25 +36,34 @@ const OffersPage = () => {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Czy na pewno chcesz usunąć tę ofertę?")) return;
+        const result = await Swal.fire({
+            title: 'Czy na pewno?',
+            text: "Nie będziesz mógł cofnąć tej operacji!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d28b5b',
+            cancelButtonColor: '#95a5a6',
+            confirmButtonText: 'Tak, usuń!',
+            cancelButtonText: 'Anuluj'
+        });
 
-        try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`http://localhost:8080/api/lesson-offers/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
+        if (result.isConfirmed) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch(`http://localhost:8080/api/lesson-offers/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    setOffers(offers.filter(offer => offer.id !== id));
+                    Swal.fire('Usunięto!', 'Oferta została skasowana.', 'success');
+                } else {
+                    Swal.fire('Błąd!', 'Nie udało się usunąć oferty.', 'error');
                 }
-            });
-
-            if (response.ok) {
-                setOffers(offers.filter(offer => offer.id !== id));
-                alert("Oferta została usunięta.");
-            } else {
-                alert("Błąd podczas usuwania oferty.");
+            } catch (err) {
+                Swal.fire('Błąd!', 'Błąd połączenia z serwerem.', 'error');
             }
-        } catch (err) {
-            console.error("Błąd sieci:", err);
         }
     };
 

@@ -29,6 +29,9 @@ const Header = () => {
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        localStorage.clear();
+
+        window.location.href = '/';
         setIsLoggedIn(false);
         setIsDropdownOpen(false);
         navigate('/');
