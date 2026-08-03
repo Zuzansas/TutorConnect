@@ -23,6 +23,12 @@ public class AvailabilitySlot {
     @Column(nullable = false)
     private Instant endTime;
 
+    @Column(nullable = false)
+    private String level;
+
+    @Column(nullable = false)
+    private String lessonType;
+
     @Builder.Default
     private boolean isReserved = false;
 }

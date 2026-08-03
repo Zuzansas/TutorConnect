@@ -95,8 +95,12 @@ const OffersPage = () => {
                             <img src={offer.imageUrl} alt={offer.title} className={styles.offerImage} />
                         </div>
                         <div className={styles.offerDetails}>
-                            <h2 className={styles.title}>{offer.title}</h2>
-                            <p className={styles.price}>{offer.price} PLN / {offer.durationMinutes} min</p>
+                            <div>
+                                <h2 className={styles.title}>{offer.title}</h2>
+                                <p className={styles.lessonType}>{offer.lessonType}</p>
+                            </div>
+
+                            <p className={styles.price}>{offer.price} PLN / {offer.totalLessons} x {offer.duration} min</p>
                             <Link to={`/offer/${offer.id}`} className={styles.viewBtn}>
                                 Zobacz ofertę
                             </Link>

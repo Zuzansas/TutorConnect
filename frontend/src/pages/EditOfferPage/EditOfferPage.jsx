@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiType, FiAlignLeft, FiDollarSign, FiClock, FiLayers } from 'react-icons/fi';
+import { FiType, FiAlignLeft, FiDollarSign, FiClock, FiLayers, FiUsers } from 'react-icons/fi';
+import { HiNumberedList } from "react-icons/hi2";
 import styles from '../../components/AddEditOffer/MainForm.module.css';
-
 
 import FormField from '../../components/AddEditOffer/FormField';
 import StepsSection from '../../components/AddEditOffer/StepsSection';
@@ -17,6 +17,8 @@ const EditOfferPage = () => {
         description: '',
         price: '',
         level: 'Podstawowy',
+        lessonType: 'INDIVIDUAL', // <--- NOWE FIELD
+        totalLessons: 4,          // <--- NOWE FIELD
         duration: 60,
         steps: ['']
     });
@@ -36,6 +38,8 @@ const EditOfferPage = () => {
                         description: data.description,
                         price: data.price,
                         level: data.level,
+                        lessonType: data.lessonType || 'INDIVIDUAL', // <--- POBIERANIE Z BACKENDU
+                        totalLessons: data.totalLessons || 4,         // <--- POBIERANIE Z BACKENDU
                         duration: data.durationMinutes,
                         steps: data.courseSteps || ['']
                     });
@@ -70,6 +74,8 @@ const EditOfferPage = () => {
         data.append('description', formData.description);
         data.append('price', formData.price);
         data.append('level', formData.level);
+        data.append('lessonType', formData.lessonType);       // <--- WYSYŁANIE DO BACKENDU
+        data.append('totalLessons', formData.totalLessons);   // <--- WYSYŁANIE DO BACKENDU
         data.append('durationMinutes', formData.duration);
         formData.steps.forEach(step => data.append('courseSteps', step));
         if (image) data.append('image', image);
@@ -85,6 +91,9 @@ const EditOfferPage = () => {
             if (response.ok) {
                 alert('Oferta zaktualizowana pomyślnie!');
                 navigate('/offers');
+            } else {
+                const errorData = await response.json();
+                alert('Błąd: ' + (errorData.message || 'Nie udało się zaktualizować oferty'));
             }
         } catch (err) {
             console.error('Błąd wysyłania:', err);
@@ -123,19 +132,35 @@ const EditOfferPage = () => {
                     </FormField>
                     <FormField icon={FiClock}>
                         <input
-                            type="number" value={formData.duration} placeholder="Czas (min)" required
+                            type="number" value={formData.duration} placeholder="Czas 1 lekcji (min)" required
                             onChange={e => handleInputChange('duration', e.target.value)}
+                        />
+                    </FormField>
+                    {/* DODANE POLE: ILOŚĆ LEKCJI W PAKIECIE */}
+                    <FormField icon={HiNumberedList}>
+                        <input
+                            type="number" value={formData.totalLessons} placeholder="Ilość lekcji w pakiecie" required
+                            onChange={e => handleInputChange('totalLessons', e.target.value)}
                         />
                     </FormField>
                 </div>
 
-                <FormField icon={FiLayers}>
-                    <select value={formData.level} onChange={e => handleInputChange('level', e.target.value)}>
-                        <option value="Podstawowy">Poziom Podstawowy</option>
-                        <option value="Średni">Poziom Średniozaawansowany</option>
-                        <option value="Rozszerzony">Poziom Rozszerzony/Matura</option>
-                    </select>
-                </FormField>
+                <div className={styles.rowTwo}>
+                    <FormField icon={FiLayers}>
+                        <select value={formData.level} onChange={e => handleInputChange('level', e.target.value)}>
+                            <option value="Podstawowy">Poziom Podstawowy</option>
+                            <option value="Średni">Poziom Średniozaawansowany</option>
+                            <option value="Rozszerzony">Poziom Rozszerzony/Matura</option>
+                        </select>
+                    </FormField>
+
+                    <FormField icon={FiUsers}>
+                        <select value={formData.lessonType} onChange={e => handleInputChange('lessonType', e.target.value)}>
+                            <option value="INDYWIDUALNE">Lekcje Indywidualne</option>
+                            <option value="GRUPOWE">Lekcje Grupowe</option>
+                        </select>
+                    </FormField>
+                </div>
 
                 <StepsSection
                     steps={formData.steps}

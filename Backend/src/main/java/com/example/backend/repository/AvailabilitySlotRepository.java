@@ -13,4 +13,13 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
 
     @Query("SELECT s FROM AvailabilitySlot s WHERE s.isReserved = false AND s.startTime >= :from AND s.endTime <= :to")
     List<AvailabilitySlot> findFreeSlots(@Param("from") Instant from, @Param("to") Instant to);
+
+    @Query("SELECT s FROM AvailabilitySlot s WHERE s.isReserved = false " +
+            "AND s.startTime >= :from AND s.endTime <= :to " +
+            "AND s.level = :level AND s.lessonType = :lessonType")
+    List<AvailabilitySlot> findMatchingFreeSlots(
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            @Param("level") String level,
+            @Param("lessonType") String lessonType);
 }

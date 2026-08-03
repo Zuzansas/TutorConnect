@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiType, FiAlignLeft, FiDollarSign, FiClock, FiLayers } from 'react-icons/fi';
+import { HiNumberedList } from "react-icons/hi2";
 import styles from '../../components/AddEditOffer/MainForm.module.css';
 
 
@@ -44,6 +45,8 @@ const AddOfferPage = () => {
         data.append('price', formData.price);
         data.append('level', formData.level);
         data.append('duration', formData.duration);
+        data.append('lessonType', formData.lessonType);
+        data.append('totalLessons', formData.totalLessons);
         formData.steps.forEach(step => data.append('steps', step));
         if (image) data.append('image', image);
 
@@ -101,15 +104,31 @@ const AddOfferPage = () => {
                             onChange={e => handleInputChange('duration', e.target.value)}
                         />
                     </FormField>
+                    <FormField icon={HiNumberedList}>
+                        <input
+                            type="number" placeholder="Ilość lekcji" required
+                            onChange={e => handleInputChange('totalLessons', e.target.value)}
+                        />
+                    </FormField>
                 </div>
 
-                <FormField icon={FiLayers}>
-                    <select onChange={e => handleInputChange('level', e.target.value)}>
-                        <option value="Podstawowy">Poziom Podstawowy</option>
-                        <option value="Średni">Poziom Średniozaawansowany</option>
-                        <option value="Rozszerzony">Poziom Rozszerzony/Matura</option>
-                    </select>
-                </FormField>
+
+                <div className={styles.rowTwo}>
+                    <FormField icon={FiLayers}>
+                        <select onChange={e => handleInputChange('level', e.target.value)}>
+                            <option value="Podstawowy">Poziom Podstawowy</option>
+                            <option value="Średni">Poziom Średniozaawansowany</option>
+                            <option value="Rozszerzony">Poziom Rozszerzony/Matura</option>
+                        </select>
+                    </FormField>
+                    <FormField icon={FiLayers}>
+                        <select onChange={e => handleInputChange('lessonType', e.target.value)}>
+                            <option value="Indywiduaalny">Indywidualny</option>
+                            <option value="Grupowy">Grupowy</option>
+                        </select>
+                    </FormField>
+                </div>
+
 
                 <StepsSection
                     steps={formData.steps}

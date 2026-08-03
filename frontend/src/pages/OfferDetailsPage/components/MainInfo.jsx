@@ -8,7 +8,6 @@ const MainInfo = ({ offer }) => {
             <img src={offer.image} alt={offer.title} className={styles.mainImage} />
 
             <h1 className={styles.title}>{offer.title}</h1>
-
             <div className={styles.section}>
                 <h3><FiInfo className={styles.icon} /> Opis oferty</h3>
                 <p>{offer.description}</p>

@@ -30,10 +30,10 @@ const AdminCalendarPage = () => {
                 id: slot.id,
                 start: slot.startTime,
                 end: slot.endTime,
-                title: 'WOLNY',
+                title: `WOLNY (${slot.level || ''} - ${slot.lessonType === 'GROUP' ? 'Grupowe' : 'Indyw.'})`,
                 backgroundColor: '#2ecc71',
                 textColor: '#ffffff',
-                extendedProps: { type: 'SLOT', isReserved: false }
+                extendedProps: { type: 'SLOT', isReserved: false, level: slot.level, lessonType: slot.lessonType }
             }));
 
             const activeReservations = reservationsData.map(res => ({
@@ -61,39 +61,72 @@ const AdminCalendarPage = () => {
         }
     };
 
+    // POPRAWIONA OBSŁUGA DODAWANIA SLOTU (z poziomem i typem lekcji)
     const handleSelect = async (selectInfo) => {
-        const result = await Swal.fire({
-            title: 'Nowy termin',
-            text: `Czy chcesz otworzyć slot: ${selectInfo.start.toLocaleString()}?`,
-            icon: 'question',
+        const { value: formValues } = await Swal.fire({
+            title: 'Nowy termin w kalendarzu',
+            html: `
+            <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; font-family: sans-serif;">
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Od: <b>${selectInfo.start.toLocaleString()}</b></p>
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Do: <b>${selectInfo.end.toLocaleString()}</b></p>
+                
+                <label style="font-size: 0.8rem; font-weight: 700; color: #d28b5b; margin-top: 5px;">POZIOM ZAAVANSE'OWANIA</label>
+                <select id="swal-slot-level" class="swal2-select" style="margin: 0; width: 100%;">
+                    <option value="Podstawowy">Poziom Podstawowy</option>
+                    <option value="Średni">Poziom Średniozaawansowany</option>
+                    <option value="Rozszerzony">Poziom Rozszerzony/Matura</option>
+                </select>
+
+                <label style="font-size: 0.8rem; font-weight: 700; color: #d28b5b; margin-top: 5px;">TYP ZAJĘĆ</label>
+                <select id="swal-slot-type" class="swal2-select" style="margin: 0; width: 100%;">
+                    <option value="INDIVIDUAL">Indywidualne</option>
+                    <option value="GROUP">Grupowe</option>
+                </select>
+            </div>
+            `,
+            focusConfirm: false,
             showCancelButton: true,
             confirmButtonColor: '#d28b5b',
             cancelButtonColor: '#95a5a6',
-            confirmButtonText: 'Tak, dodaj',
-            cancelButtonText: 'Anuluj'
+            confirmButtonText: 'Dodaj slot',
+            cancelButtonText: 'Anuluj',
+            preConfirm: () => {
+                return {
+                    level: document.getElementById('swal-slot-level').value,
+                    lessonType: document.getElementById('swal-slot-type').value
+                };
+            }
         });
 
-        if (result.isConfirmed) {
+        if (formValues) {
             try {
                 const response = await fetch('http://localhost:8080/api/slots', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         startTime: selectInfo.start.toISOString(),
-                        endTime: selectInfo.end.toISOString()
+                        endTime: selectInfo.end.toISOString(),
+                        level: formValues.level,
+                        lessonType: formValues.lessonType
                     })
                 });
+
                 if (response.ok) {
                     toast.success("Termin został dodany!");
                     fetchData(selectInfo.view.activeStart, selectInfo.view.activeEnd);
                 } else {
-                    toast.error("Błąd zapisu slotu");
+                    const errData = await response.json();
+                    toast.error("Błąd zapisu slotu: " + (errData.message || 'Niepoprawne dane'));
                 }
             } catch (error) {
                 toast.error("Błąd połączenia z serwerem");
             }
         }
     };
+
     const handleCancelReservation = async (reservationId) => {
         const result = await Swal.fire({
             title: 'Czy na pewno odwołać?',
@@ -115,11 +148,8 @@ const AdminCalendarPage = () => {
 
                 if (response.ok) {
                     toast.success("Rezerwacja została odwołana");
-                    // Odświeżamy dane w kalendarzu
-                    // Pobieramy aktualny widok z FullCalendar przez API jeśli to możliwe lub po prostu fetchData
-                    // Zakładając, że masz dostęp do start/end, wywołujemy fetchData:
                     Swal.close();
-                    window.location.reload(); // Najprostszy sposób na pełne odświeżenie stanów
+                    fetchData(new Date(), new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
                 } else {
                     toast.error("Błąd podczas odwoływania rezerwacji");
                 }
@@ -235,7 +265,6 @@ const AdminCalendarPage = () => {
                     popup: styles.swalSoftPopup
                 },
                 didOpen: () => {
-
                     document.getElementById('add-materials-btn').onclick = () => {
                         Swal.close();
                         handleOpenMaterialsModal(clickInfo.event.id);

@@ -44,13 +44,27 @@ public class AvailabilitySlotController {
         return slotService.createSlot(request);
     }
 
-    @Operation(summary = "Pobierz wolne terminy", description = "Zwraca listę dostępnych slotów w podanym zakresie dat. Używane przez kalendarz na frontendzie.")
+    @Operation(summary = "Pobierz wolne terminy (Ogólne)", description = "Zwraca listę wszystkich dostępnych slotów w podanym zakresie dat.")
     @GetMapping("/available")
     public List<AvailabilitySlotResponse> getAvailableSlots(
             @RequestParam Instant from,
             @RequestParam Instant to) {
 
         return slotService.getFreeSlots(from, to);
+    }
+
+    @Operation(summary = "Pobierz wolne terminy dla pakietu", description = "Zwraca wolne terminy przefiltrowane wg poziomu trudności i typu zajęć wykupionego pakietu.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista dopasowanych slotów", content = @Content(schema = @Schema(implementation = AvailabilitySlotResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Nie znaleziono pakietu")
+    })
+    @GetMapping("/available-for-package")
+    public List<AvailabilitySlotResponse> getAvailableSlotsForPackage(
+            @RequestParam UUID userPackageId,
+            @RequestParam Instant from,
+            @RequestParam Instant to) {
+
+        return slotService.getMatchingFreeSlotsForPackage(userPackageId, from, to);
     }
 
     @Operation(summary = "Usuń termin (Admin)", description = "Usuwa niezarezerwowany termin z kalendarza.")

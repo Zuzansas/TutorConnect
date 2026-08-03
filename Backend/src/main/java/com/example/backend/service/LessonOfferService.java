@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,6 +35,8 @@ public class LessonOfferService {
                 .title(request.title())
                 .description(request.description())
                 .level(request.level())
+                .lessonType(request.lessonType())
+                .totalLessons(request.totalLessons())
                 .price(request.price())
                 .durationMinutes(request.durationMinutes())
                 .courseSteps(request.courseSteps())
@@ -47,6 +48,7 @@ public class LessonOfferService {
         return toResponse(offer);
     }
 
+    @Transactional
     public LessonOfferResponse updateOffer(UUID id, UpdateLessonOfferRequest request, MultipartFile image) {
         LessonOffer offer = lessonOfferRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Oferta nie istnieje"));
@@ -57,6 +59,10 @@ public class LessonOfferService {
             offer.setDescription(request.description());
         if (request.level() != null)
             offer.setLevel(request.level());
+        if (request.lessonType() != null)
+            offer.setLessonType(request.lessonType());
+        if (request.totalLessons() != null)
+            offer.setTotalLessons(request.totalLessons());
         if (request.price() != null)
             offer.setPrice(request.price());
         if (request.courseSteps() != null) {
@@ -105,6 +111,8 @@ public class LessonOfferService {
                 o.getTitle(),
                 o.getDescription(),
                 o.getLevel(),
+                o.getLessonType(),
+                o.getTotalLessons(),
                 o.getPrice(),
                 o.getDurationMinutes(),
                 o.getViewsCount(),

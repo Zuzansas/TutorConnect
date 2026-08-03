@@ -2,7 +2,6 @@ package com.example.backend.model.entity;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +17,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "LessonOffer")
+@Table(name = "lesson_offer")
 public class LessonOffer {
 
     @Id
@@ -31,10 +30,21 @@ public class LessonOffer {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @Column(nullable = false)
     private String level;
 
+    private String subject;
+
+    @Column(name = "lesson_type", nullable = false)
+    private String lessonType;
+
+    @Column(name = "total_lessons", nullable = false)
+    private Integer totalLessons;
+
+    @Column(nullable = false)
     private BigDecimal price;
 
+    @Column(name = "duration_minutes")
     private Integer durationMinutes;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,5 +63,4 @@ public class LessonOffer {
     @Column(name = "views_count", nullable = false)
     @Builder.Default
     private Integer viewsCount = 0;
-
 }

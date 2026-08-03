@@ -56,6 +56,8 @@ const OfferDetailsPage = () => {
                     pricePerHour={offer.price}
                     duration={offer.durationMinutes}
                     offerId={offer.id}
+                    lessonType={offer.lessonType}
+                    totalLessons={offer.totalLessons}
                 />
             </div>
         </div>

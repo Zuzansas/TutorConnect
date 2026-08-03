@@ -11,5 +11,7 @@ public class AvailabilitySlotResponse {
     private UUID id;
     private Instant startTime;
     private Instant endTime;
+    private String level;
+    private String lessonType;
     private boolean isReserved;
 }

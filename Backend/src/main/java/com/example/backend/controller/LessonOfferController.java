@@ -54,10 +54,12 @@ public class LessonOfferController {
             @RequestParam String description,
             @RequestParam BigDecimal price,
             @RequestParam String level,
+            @RequestParam String lessonType,
+            @RequestParam Integer totalLessons,
             @RequestParam Integer duration,
             @RequestParam List<String> steps) {
         CreateLessonOfferRequest request = new CreateLessonOfferRequest(
-                title, description, level, price, duration, steps);
+                title, description, level, lessonType, totalLessons, price, duration, steps);
         return service.createOffer(request, image);
     }
 

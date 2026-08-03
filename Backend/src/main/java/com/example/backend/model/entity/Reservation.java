@@ -24,8 +24,8 @@ public class Reservation {
     private User student;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "offer_id", nullable = false)
-    private LessonOffer lessonOffer;
+    @JoinColumn(name = "user_package_id", nullable = false)
+    private UserPackage userPackage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id")
@@ -43,8 +43,6 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status;
-
-    private String paymentId;
 
     private Instant createdAt;
 

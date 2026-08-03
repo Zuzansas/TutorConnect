@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './ReservationsPage.module.css';
 import {
     FaCalendarCheck,
@@ -8,12 +9,18 @@ import {
     FaChevronUp,
     FaFileAlt,
     FaPlus,
-    FaStar
+    FaStar,
+    FaBoxOpen,
+    FaCalendarPlus,
+    FaUser,
+    FaUsers
 } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { toast, ToastContainer } from 'react-toastify';
 
 const ReservationsPage = () => {
+    const navigate = useNavigate();
+    const [packages, setPackages] = useState([]); // NOWY STAN DLA PAKIETÓW
     const [reservations, setReservations] = useState([]);
     const [expandedRes, setExpandedRes] = useState(null);
     const [userReviews, setUserReviews] = useState([]);
@@ -30,8 +37,27 @@ const ReservationsPage = () => {
 
     const fetchInitialData = async () => {
         setLoading(true);
-        await Promise.all([fetchReservations(), fetchUserReviews()]);
+        await Promise.all([
+            fetchUserPackages(),
+            fetchReservations(),
+            fetchUserReviews()
+        ]);
         setLoading(false);
+    };
+
+    // NOWA FUNKCJA: Pobieranie aktywnych pakietów użytkownika
+    const fetchUserPackages = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/packages/my-active', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setPackages(data);
+            }
+        } catch (error) {
+            console.error("Błąd pobierania pakietów:", error);
+        }
     };
 
     const fetchReservations = async () => {
@@ -100,7 +126,6 @@ const ReservationsPage = () => {
 
         if (formValues) {
             try {
-                console.log("Przesyłam ID oferty:", res.lessonOfferId);
                 const response = await fetch('http://localhost:8080/api/reviews', {
                     method: 'POST',
                     headers: {
@@ -155,62 +180,25 @@ const ReservationsPage = () => {
             html: `
             <div style="display: flex; flex-direction: column; gap: 15px; text-align: left; font-family: 'Inter', sans-serif; padding: 10px;">
                 <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #d28b5b; text-transform: uppercase; letter-spacing: 0.5px;">Tytuł materiałów</label>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #d28b5b; text-transform: uppercase;">Tytuł materiałów</label>
                     <input id="swal-input-title" class="swal2-input" style="margin: 0; width: 100%; border-radius: 10px; border: 1px solid #f1ece8;" placeholder="np. Notatki z lekcji 1">
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #d28b5b; text-transform: uppercase; letter-spacing: 0.5px;">Opis (opcjonalnie)</label>
-                    <textarea id="swal-input-desc" class="swal2-textarea" style="margin: 0; width: 100%; border-radius: 10px; border: 1px solid #f1ece8; min-height: 80px;" placeholder="Krótki opis dla ucznia..."></textarea>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #d28b5b; text-transform: uppercase;">Opis (opcjonalnie)</label>
+                    <textarea id="swal-input-desc" class="swal2-textarea" style="margin: 0; width: 100%; border-radius: 10px; border: 1px solid #f1ece8; min-height: 80px;" placeholder="Krótki opis..."></textarea>
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #d28b5b; text-transform: uppercase; letter-spacing: 0.5px;">Załącznik</label>
-                    <div style="position: relative; width: 100%;">
-                        <input type="file" id="swal-input-file" style="display: none;">
-                        <label for="swal-input-file" id="file-label" style="
-                            display: flex; 
-                            align-items: center; 
-                            justify-content: center; 
-                            gap: 10px;
-                            padding: 12px; 
-                            background: #fcfaf8; 
-                            border: 2px dashed #d28b5b; 
-                            border-radius: 10px; 
-                            cursor: pointer; 
-                            color: #d28b5b; 
-                            font-weight: 600;
-                            transition: all 0.3s ease;
-                        ">
-                            <i class="fas fa-cloud-upload-alt"></i> 
-                            <span id="file-name">Kliknij, aby wybrać plik</span>
-                        </label>
-                    </div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #d28b5b; text-transform: uppercase;">Załącznik</label>
+                    <input type="file" id="swal-input-file" style="margin: 0; width: 100%;">
                 </div>
             </div>
         `,
             focusConfirm: false,
             confirmButtonColor: '#d28b5b',
-            confirmButtonText: 'Wyślij do ucznia',
+            confirmButtonText: 'Wyślij',
             showCancelButton: true,
-            cancelButtonText: 'Anuluj',
-            customClass: {
-                popup: styles.swalSoftPopup
-            },
-            didOpen: () => {
-                const fileInput = document.getElementById('swal-input-file');
-                const fileLabel = document.getElementById('file-label');
-                const fileNameDisplay = document.getElementById('file-name');
-
-                fileInput.onchange = () => {
-                    if (fileInput.files.length > 0) {
-                        const name = fileInput.files[0].name;
-                        fileNameDisplay.innerText = name.length > 25 ? name.substring(0, 22) + '...' : name;
-                        fileLabel.style.background = '#e6f4ff';
-                        fileLabel.style.borderStyle = 'solid';
-                    }
-                };
-            },
             preConfirm: () => {
                 const title = document.getElementById('swal-input-title').value;
                 const description = document.getElementById('swal-input-desc').value;
@@ -256,7 +244,8 @@ const ReservationsPage = () => {
 
     const handleCancel = async (id) => {
         const result = await Swal.fire({
-            title: 'Czy na pewno?',
+            title: 'Czy na pewno chcesz odwołać lekcję?',
+            text: '1 lekcja zostanie zwrócona do Twojego pakietu (jeśli odwołujesz min. 12h przed zajęciami).',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#e74c3c',
@@ -276,8 +265,11 @@ const ReservationsPage = () => {
                 });
 
                 if (response.ok) {
-                    toast.success("Anulowano rezerwację.");
-                    fetchReservations();
+                    toast.success("Anulowano rezerwację. Stan pakietu został zaktualizowany.");
+                    fetchInitialData(); // Odświeżamy rezerwacje i pakiet!
+                } else {
+                    const err = await response.json();
+                    toast.error(err.message || "Błąd podczas odwoływania.");
                 }
             } catch (error) {
                 toast.error("Błąd połączenia.");
@@ -298,15 +290,108 @@ const ReservationsPage = () => {
     return (
         <div className={styles.container}>
             <ToastContainer />
+
+            {/* NAGŁÓWEK */}
             <div className={styles.headerSection}>
-                <h1><FaCalendarCheck /> Twoje Rezerwacje</h1>
-                <p>Lista Twoich nadchodzących i minionych zajęć</p>
+                <h1><FaCalendarCheck /> Twoje Konto Lekcji i Rezerwacje</h1>
+                <p>Zarządzaj swoimi pakietami oraz terminami zajęć</p>
             </div>
+
+
+            {userRole !== 'ADMIN' && (
+                <div style={{ marginBottom: '40px' }}>
+                    <h2 style={{ fontSize: '1.3rem', color: '#d28b5b', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <FaBoxOpen /> Twoje Wykupione Pakiety
+                    </h2>
+
+                    {packages.length > 0 ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                            {packages.map(pkg => (
+                                <div key={pkg.id} style={{
+                                    background: '#ffffff',
+                                    padding: '20px',
+                                    borderRadius: '15px',
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                                    border: '1px solid #f1ece8',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justify: 'space-between',
+                                    gap: '12px'
+                                }}>
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{
+                                                fontSize: '0.75rem',
+                                                fontWeight: 'bold',
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                background: pkg.lessonOffer.lessonType === 'GROUP' ? '#e6f4ff' : '#fff0f6',
+                                                color: pkg.lessonOffer.lessonType === 'GROUP' ? '#0070f3' : '#c01e5a',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '5px'
+                                            }}>
+                                                {pkg.lessonOffer.lessonType === 'GROUP' ? <FaUsers /> : <FaUser />}
+                                                {pkg.lessonOffer.lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'}
+                                            </span>
+                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>
+                                                Poziom: <b>{pkg.lessonOffer.level}</b>
+                                            </span>
+                                        </div>
+
+                                        <h3 style={{ margin: '10px 0 5px 0', fontSize: '1.1rem', color: '#2c3e50' }}>
+                                            {pkg.lessonOffer.title}
+                                        </h3>
+
+                                        <p style={{ margin: 0, fontSize: '0.9rem', color: '#555' }}>
+                                            Pozostało do wykorzystania: <b style={{ color: '#2ecc71', fontSize: '1.1rem' }}>{pkg.remainingLessons}</b> lekcji
+                                        </p>
+
+                                        {pkg.expiresAt && (
+                                            <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: '#95a5a6' }}>
+                                                Ważny do: {new Date(pkg.expiresAt).toLocaleDateString()}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={() => navigate(`/book/${pkg.id}`)}
+                                        style={{
+                                            background: '#d28b5b',
+                                            color: '#fff',
+                                            border: 'none',
+                                            padding: '10px 15px',
+                                            borderRadius: '10px',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                            transition: '0.3s'
+                                        }}
+                                    >
+                                        <FaCalendarPlus /> Zarezerwuj lekcję w kalendarzu
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            Nie masz obecnie żadnych aktywnych pakietów lekcji. Kup pakiet w zakładce Oferty!
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* SEKCJA 2: LISTA REZERWACJI */}
+            <h2 style={{ fontSize: '1.3rem', color: '#2c3e50', marginBottom: '15px' }}>
+                Zaplanowane i Odbyte Zajęcia
+            </h2>
 
             <div className={styles.timeline}>
                 {reservations.length > 0 ? (
                     reservations.map((res) => {
-
                         const isPast = new Date(res.startTime) < new Date();
                         const existingReview = getExistingReview(res.lessonOfferId);
 
@@ -349,13 +434,11 @@ const ReservationsPage = () => {
                                             )
                                         )}
 
-
                                         {userRole === 'ADMIN' && (
                                             <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn}>
                                                 <FaPlus />
                                             </button>
                                         )}
-
 
                                         {res.status !== 'CANCELLED' && (userRole === 'ADMIN' || !isPast) && (
                                             <button onClick={() => handleCancel(res.id)} className={styles.cancelBtn}>
@@ -384,7 +467,7 @@ const ReservationsPage = () => {
                             </div>
                         );
                     })
-                ) : <div className={styles.emptyState}>Brak rezerwacji.</div>}
+                ) : <div className={styles.emptyState}>Brak zarezerwowanych lekcji.</div>}
             </div>
         </div>
     );

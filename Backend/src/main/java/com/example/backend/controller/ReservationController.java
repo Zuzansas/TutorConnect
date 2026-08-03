@@ -8,20 +8,21 @@ import com.example.backend.model.response.LessonMaterialResponse;
 import com.example.backend.model.response.ReservationResponse;
 import com.example.backend.service.ReservationService;
 import com.example.backend.service.UserService;
+import com.example.backend.service.LessonMaterialService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
-
-import com.example.backend.service.LessonMaterialService;
 
 import java.security.Principal;
 import java.util.List;
@@ -33,32 +34,31 @@ import java.util.UUID;
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
+
         private final LessonMaterialService lessonMaterialService;
         private final ReservationService reservationService;
         private final UserService userService;
 
-        @Operation(summary = "Utwórz nową rezerwację", description = "Rezerwuje termin dla zalogowanego użytkownika na podstawie wybranej oferty i slotu czasowego.")
+        @Operation(summary = "Utwórz nową rezerwację", description = "Rezerwuje termin dla zalogowanego użytkownika na podstawie wykupionego pakietu i slotu czasowego.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Rezerwacja została pomyślnie utworzona", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReservationResponse.class))),
-                        @ApiResponse(responseCode = "400", description = "Niepoprawne dane wejściowe lub termin zajęty", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-                        @ApiResponse(responseCode = "404", description = "Nie znaleziono oferty lub terminu", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+                        @ApiResponse(responseCode = "400", description = "Niepoprawne dane wejściowe, brak lekcji lub termin zajęty", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Nie znaleziono pakietu lub terminu", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
         })
         @PostMapping
         public ReservationResponse createReservation(
                         @Valid @RequestBody CreateReservationRequest request,
                         Principal principal) {
 
-                User student = userService.findUserByUsername(principal.getName());
-
                 Reservation reservation = reservationService.createReservation(
-                                request.offerId(),
-                                student.getId(),
-                                request.slotId());
+                                request.userPackageId(),
+                                request.slotId(),
+                                principal.getName());
 
                 return toResponse(reservation);
         }
 
-        @Operation(summary = "Anuluj rezerwację (Uczeń)", description = "Pozwala uczniowi anulować rezerwację. Zwraca komunikat o statusie zwrotu środków (zasada 48h).")
+        @Operation(summary = "Anuluj rezerwację (Uczeń)", description = "Pozwala uczniowi anulować rezerwację. Zwraca komunikat o statusie zwrotu lekcji.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Rezerwacja anulowana", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
                         @ApiResponse(responseCode = "403", description = "Brak uprawnień do anulowania tej rezerwacji", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
@@ -69,9 +69,7 @@ public class ReservationController {
                         @PathVariable UUID id,
                         Principal principal) {
 
-                User student = userService.findUserByUsername(principal.getName());
-
-                String message = reservationService.cancelByStudent(id, student.getId());
+                String message = reservationService.cancelByStudent(id, principal.getName());
 
                 return ResponseEntity.ok(Map.of("message", message));
         }
@@ -86,6 +84,7 @@ public class ReservationController {
         public ResponseEntity<Void> cancelReservationByTutor(
                         @PathVariable UUID id,
                         Principal principal) {
+
                 userService.validateAdminAccess(principal.getName());
                 reservationService.cancelByTutor(id);
 
@@ -127,8 +126,7 @@ public class ReservationController {
                         @ApiResponse(responseCode = "200", description = "Lista pobrana pomyślnie", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReservationResponse.class)))
         })
         @GetMapping
-        public ResponseEntity<List<ReservationResponse>> getReservations(
-                        Principal principal) {
+        public ResponseEntity<List<ReservationResponse>> getReservations(Principal principal) {
 
                 List<Reservation> reservations = reservationService.getReservations(principal.getName());
 
@@ -141,11 +139,12 @@ public class ReservationController {
 
         private ReservationResponse toResponse(Reservation r) {
                 User student = r.getStudent();
+                var offer = r.getUserPackage().getLessonOffer();
 
                 return ReservationResponse.builder()
                                 .id(r.getId())
-                                .lessonOfferId(r.getLessonOffer().getId())
-                                .lessonTitle(r.getLessonOffer().getTitle())
+                                .lessonOfferId(offer.getId())
+                                .lessonTitle(offer.getTitle())
                                 .studentName(student.getFullName())
                                 .studentEmail(student.getEmail())
                                 .studentBio(student.getBio())
@@ -153,7 +152,7 @@ public class ReservationController {
                                 .studentAvatarUrl(student.getAvatarURL() != null ? student.getAvatarURL() : "")
                                 .startTime(r.getStartTime())
                                 .endTime(r.getEndTime())
-                                .price(r.getPrice())
+                                .price(offer.getPrice())
                                 .status(r.getStatus())
                                 .createdAt(r.getCreatedAt())
                                 .build();

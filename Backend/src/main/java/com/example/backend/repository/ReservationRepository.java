@@ -20,8 +20,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
 
         List<Reservation> findAllByOrderByStartTimeDesc();
 
+        @Query("SELECT COUNT(r) > 0 FROM Reservation r " +
+                        "WHERE r.student.id = :studentId " +
+                        "AND r.userPackage.lessonOffer.id = :lessonOfferId " +
+                        "AND r.status = :status")
         boolean existsByStudentIdAndLessonOfferIdAndStatus(
-                        UUID studentId,
-                        UUID lessonOfferId,
-                        ReservationStatus status);
+                        @Param("studentId") UUID studentId,
+                        @Param("lessonOfferId") UUID lessonOfferId,
+                        @Param("status") ReservationStatus status);
 }
