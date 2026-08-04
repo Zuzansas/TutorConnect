@@ -6,7 +6,6 @@ import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 
 const BookingPage = () => {
-
     const { packageId } = useParams();
     const navigate = useNavigate();
 
@@ -94,9 +93,22 @@ const BookingPage = () => {
         }
     };
 
+    // Pomocnicza funkcja sprawdzająca, czy slot rozpoczyna się za mniej niż 24h
+    const isTooLateToBook = (startTime) => {
+        const now = new Date();
+        const slotTime = new Date(startTime);
+        const diffInHours = (slotTime - now) / (1000 * 60 * 60);
+        return diffInHours < 24;
+    };
+
     const handleBooking = async () => {
         if (!selectedSlot || !userPackage) return;
 
+        // Dodatkowa weryfikacja przed wysłaniem formularza
+        if (isTooLateToBook(selectedSlot.startTime)) {
+            toast.error("Rezerwacji można dokonać najpóźniej na 24h przed zajęciami.");
+            return;
+        }
 
         const result = await Swal.fire({
             title: 'Potwierdź rezerwację',
@@ -117,7 +129,6 @@ const BookingPage = () => {
 
         if (result.isConfirmed) {
             try {
-
                 const response = await fetch('http://localhost:8080/api/reservations', {
                     method: 'POST',
                     headers: {
@@ -176,15 +187,35 @@ const BookingPage = () => {
                     {loading ? (
                         <p className={styles.statusMsg}>Szukam zgodnych wolnych terminów...</p>
                     ) : availableSlots.length > 0 ? (
-                        availableSlots.map(slot => (
-                            <button
-                                key={slot.id}
-                                className={`${styles.slotBtn} ${selectedSlot?.id === slot.id ? styles.selected : ''}`}
-                                onClick={() => setSelectedSlot(slot)}
-                            >
-                                {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </button>
-                        ))
+                        availableSlots.map(slot => {
+                            const disabled = isTooLateToBook(slot.startTime);
+                            const isSelected = selectedSlot?.id === slot.id;
+
+                            return (
+                                <button
+                                    key={slot.id}
+                                    disabled={disabled}
+                                    title={disabled ? "Za późno na rezerwację (wymagane min. 24h wyprzedzenia)" : ""}
+                                    className={`${styles.slotBtn} ${isSelected ? styles.selected : ''} ${disabled ? styles.disabledSlot : ''}`}
+                                    onClick={() => !disabled && setSelectedSlot(slot)}
+                                    style={disabled ? {
+                                        opacity: 0.45,
+                                        cursor: 'not-allowed',
+                                        backgroundColor: '#e9ecef',
+                                        color: '#6c757d',
+                                        borderColor: '#ced4da',
+                                        textDecoration: 'line-through'
+                                    } : {}}
+                                >
+                                    {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {disabled && (
+                                        <span style={{ display: 'block', fontSize: '0.65rem', textDecoration: 'none', color: '#d9534f' }}>
+                                            &lt; 24h
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })
                     ) : (
                         <p className={styles.statusMsg}>
                             Brak pasujących wolnych terminów ({userPackage?.lessonOffer.level} / {userPackage?.lessonOffer.lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'}) na ten dzień.

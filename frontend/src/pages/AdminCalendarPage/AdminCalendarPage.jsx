@@ -26,6 +26,7 @@ const AdminCalendarPage = () => {
             );
             const reservationsData = await reservationsRes.json();
 
+            // 1. Mapowanie wolnych slotów
             const freeSlots = slotsData.map(slot => ({
                 id: slot.id,
                 start: slot.startTime,
@@ -36,24 +37,26 @@ const AdminCalendarPage = () => {
                 extendedProps: { type: 'SLOT', isReserved: false, level: slot.level, lessonType: slot.lessonType }
             }));
 
-            const activeReservations = reservationsData.map(res => ({
-                id: res.id,
-                start: res.startTime,
-                end: res.endTime,
-                title: `${res.lessonTitle} - ${res.studentName}`,
-                backgroundColor: '#d28b5b',
-                textColor: '#ffffff',
-
-                extendedProps: {
-                    type: 'RESERVATION',
-                    isReserved: true,
-                    status: res.status,
-                    studentEmail: res.studentEmail,
-                    studentBio: res.studentBio,
-                    studentCity: res.studentCity,
-                    studentAvatarUrl: res.studentAvatarUrl
-                }
-            }));
+            // 2. FILTROWANIE: Odrzucamy anulowane rezerwacje!
+            const activeReservations = reservationsData
+                .filter(res => res.status !== 'CANCELLED') // <--- FILTRACJA ANULOWANYCH REZERWACJI
+                .map(res => ({
+                    id: res.id,
+                    start: res.startTime,
+                    end: res.endTime,
+                    title: `${res.lessonTitle} - ${res.studentName}`,
+                    backgroundColor: '#d28b5b',
+                    textColor: '#ffffff',
+                    extendedProps: {
+                        type: 'RESERVATION',
+                        isReserved: true,
+                        status: res.status,
+                        studentEmail: res.studentEmail,
+                        studentBio: res.studentBio,
+                        studentCity: res.studentCity,
+                        studentAvatarUrl: res.studentAvatarUrl
+                    }
+                }));
 
             setEvents([...freeSlots, ...activeReservations]);
         } catch (error) {
@@ -61,7 +64,6 @@ const AdminCalendarPage = () => {
         }
     };
 
-    // POPRAWIONA OBSŁUGA DODAWANIA SLOTU (z poziomem i typem lekcji)
     const handleSelect = async (selectInfo) => {
         const { value: formValues } = await Swal.fire({
             title: 'Nowy termin w kalendarzu',

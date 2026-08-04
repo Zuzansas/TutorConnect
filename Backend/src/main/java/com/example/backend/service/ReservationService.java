@@ -101,16 +101,35 @@ public class ReservationService {
             throw new BadRequestException("Brak dostępu do tej rezerwacji.");
         }
 
+        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
+            throw new BadRequestException("Ta rezerwacja jest już odwołana.");
+        }
+
         Instant now = Instant.now();
         Instant cancellationLimit = reservation.getStartTime().minus(Duration.ofHours(CANCELLATION_DEADLINE_HOURS));
 
-        if (now.isAfter(cancellationLimit)) {
-            throw new BadRequestException("Nie można odwołać lekcji później niż 12h przed jej rozpoczęciem.");
+        boolean isLateCancellation = now.isAfter(cancellationLimit);
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+
+        AvailabilitySlot slot = reservation.getAvailabilitySlot();
+        if (slot != null) {
+            slot.setReserved(false);
+            slotRepository.save(slot);
         }
 
-        cancelReservationAndRefund(reservation);
+        reservationRepository.save(reservation);
 
-        return "Lekcja została pomyślnie odwołana. Zwrócono 1 lekcję do pakietu.";
+        if (!isLateCancellation) {
+            UserPackage userPackage = reservation.getUserPackage();
+            if (userPackage != null) {
+                userPackage.setRemainingLessons(userPackage.getRemainingLessons() + 1);
+                packageRepository.save(userPackage);
+            }
+            return "Lekcja została odwołana z odpowiednim wyprzedzeniem. Zwrócono 1 lekcję do Twojego pakietu.";
+        } else {
+            return "Lekcja została odwołana na mniej niż 12h przed zajęciami. Lekcja NIE została zwrócona do pakietu.";
+        }
     }
 
     @Transactional
