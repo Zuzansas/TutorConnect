@@ -20,7 +20,7 @@ import { toast, ToastContainer } from 'react-toastify';
 
 const ReservationsPage = () => {
     const navigate = useNavigate();
-    const [packages, setPackages] = useState([]); // NOWY STAN DLA PAKIETÓW
+    const [packages, setPackages] = useState([]);
     const [reservations, setReservations] = useState([]);
     const [expandedRes, setExpandedRes] = useState(null);
     const [userReviews, setUserReviews] = useState([]);
@@ -44,8 +44,6 @@ const ReservationsPage = () => {
         ]);
         setLoading(false);
     };
-
-    // NOWA FUNKCJA: Pobieranie aktywnych pakietów użytkownika
     const fetchUserPackages = async () => {
         try {
             const response = await fetch('http://localhost:8080/api/packages/my-active', {
@@ -383,8 +381,6 @@ const ReservationsPage = () => {
                     )}
                 </div>
             )}
-
-            {/* SEKCJA 2: LISTA REZERWACJI */}
             <h2 style={{ fontSize: '1.3rem', color: '#2c3e50', marginBottom: '15px' }}>
                 Zaplanowane i Odbyte Zajęcia
             </h2>

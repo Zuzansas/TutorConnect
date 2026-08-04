@@ -18,7 +18,6 @@ const PriceInfo = ({ pricePerHour, duration, totalLessons, offerId, lessonType }
         }
     };
 
-    // Logika zakupu pakietu na backendzie
     const executePurchase = async (token) => {
         const confirm = await Swal.fire({
             title: 'Potwierdzenie zakupu',
@@ -62,7 +61,7 @@ const PriceInfo = ({ pricePerHour, duration, totalLessons, offerId, lessonType }
                         confirmButtonColor: '#d28b5b',
                         confirmButtonText: 'Moje Rezerwacje'
                     });
-                    navigate('/reservations'); // Przekierowanie do strony ze stanem konta lekcji i rezerwacjami
+                    navigate('/reservations');
                 } else {
                     const err = await response.json();
                     Swal.fire({

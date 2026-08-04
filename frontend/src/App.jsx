@@ -28,7 +28,7 @@ function App() {
           <Route path="/add-offer" element={<AddOfferPage />} />
           <Route path="/edit-offer/:id" element={<ProtectedRoute><EditOfferPage /></ProtectedRoute>} />
           <Route path='/admin-calendar' element={<ProtectedRoute><AdminCalendarPage /></ProtectedRoute>} />
-          <Route path="/book/:offerId" element={<BookingPage />} />
+          <Route path="/book/:packageId" element={<BookingPage />} />
           <Route path="/reservations" element={<ReservationsPage />} />
         </Routes>
         <Footer />

@@ -21,23 +21,25 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final AvailabilitySlotRepository slotRepository;
     private final UserPackageRepository packageRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
-    private static final long BOOKING_LIMIT_HOURS = 24;
     private static final long CANCELLATION_DEADLINE_HOURS = 12;
 
     @Transactional
-    public Reservation createReservation(UUID userPackageId, UUID slotId, String username) {
-        User student = userService.findUserByUsername(username);
+    public Reservation createReservation(UUID userPackageId, UUID slotId, String principalName) {
+        User student = userRepository.findByEmail(principalName)
+                .orElseGet(() -> userRepository.findByUsername(principalName)
+                        .orElseThrow(() -> new NotFoundException("Użytkownik nie istnieje: " + principalName)));
+
         UserPackage userPackage = packageRepository.findById(userPackageId)
                 .orElseThrow(() -> new NotFoundException("Pakiet nie istnieje"));
 
         if (!userPackage.getUser().getId().equals(student.getId())) {
-            throw new BadRequestException("Pakiet nie należy do tego użytkownika.");
+            throw new BadRequestException("Pakiet nie należy do zalogowanego użytkownika.");
         }
 
         if (userPackage.getRemainingLessons() <= 0) {
-            throw new BadRequestException("Brak dostępnych lekcji w pakiecie.");
+            throw new BadRequestException("Brak dostępnych lekcji w tym pakiecie.");
         }
 
         AvailabilitySlot slot = slotRepository.findById(slotId)
@@ -49,13 +51,22 @@ public class ReservationService {
 
         LessonOffer offer = userPackage.getLessonOffer();
 
-        if (!slot.getLevel().equals(offer.getLevel()) || !slot.getLessonType().equals(offer.getLessonType())) {
-            throw new BadRequestException("Termin nie odpowiada profilowi wykupionego pakietu.");
-        }
+        String slotLevel = slot.getLevel() != null ? slot.getLevel().toString().trim() : "";
+        String offerLevel = offer.getLevel() != null ? offer.getLevel().toString().trim() : "";
+        boolean levelMatches = slotLevel.equalsIgnoreCase(offerLevel);
 
-        Instant now = Instant.now();
-        if (now.plus(Duration.ofHours(BOOKING_LIMIT_HOURS)).isAfter(slot.getStartTime())) {
-            throw new BadRequestException("Rezerwacji można dokonać najpóźniej na 24h przed zajęciami.");
+        String slotType = slot.getLessonType() != null ? slot.getLessonType().toString().toLowerCase() : "";
+        String offerType = offer.getLessonType() != null ? offer.getLessonType().toString().toLowerCase() : "";
+
+        boolean isSlotGroup = slotType.contains("group") || slotType.contains("grup");
+        boolean isOfferGroup = offerType.contains("group") || offerType.contains("grup");
+
+        boolean typeMatches = (isSlotGroup == isOfferGroup);
+
+        if (!levelMatches || !typeMatches) {
+            throw new BadRequestException(
+                    String.format("Termin (%s / %s) nie odpowiada wykupionemu pakietowi (%s / %s).",
+                            slotLevel, slotType, offerLevel, offerType));
         }
 
         slot.setReserved(true);
@@ -70,6 +81,7 @@ public class ReservationService {
                 .availabilitySlot(slot)
                 .startTime(slot.getStartTime())
                 .endTime(slot.getEndTime())
+                .price(offer.getPrice())
                 .status(ReservationStatus.CONFIRMED)
                 .build();
 
@@ -77,13 +89,16 @@ public class ReservationService {
     }
 
     @Transactional
-    public String cancelByStudent(UUID reservationId, String username) {
-        User student = userService.findUserByUsername(username);
+    public String cancelByStudent(UUID reservationId, String principalName) {
+        User student = userRepository.findByEmail(principalName)
+                .orElseGet(() -> userRepository.findByUsername(principalName)
+                        .orElseThrow(() -> new NotFoundException("Użytkownik nie istnieje")));
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new NotFoundException("Rezerwacja nie istnieje"));
 
         if (!reservation.getStudent().getId().equals(student.getId())) {
-            throw new BadRequestException("Brak dostępu do rezerwacji.");
+            throw new BadRequestException("Brak dostępu do tej rezerwacji.");
         }
 
         Instant now = Instant.now();
@@ -103,14 +118,15 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new NotFoundException("Rezerwacja nie istnieje"));
 
-        // Gdy korepetytor odwołuje lekcję, zawsze zwalniamy slot i zwracamy lekcję
-        // uczniowi
         cancelReservationAndRefund(reservation);
     }
 
     @Transactional(readOnly = true)
-    public List<Reservation> getReservations(String username) {
-        User user = userService.findUserByUsername(username);
+    public List<Reservation> getReservations(String principalName) {
+        User user = userRepository.findByEmail(principalName)
+                .orElseGet(() -> userRepository.findByUsername(principalName)
+                        .orElseThrow(() -> new NotFoundException("Użytkownik nie istnieje")));
+
         if (user.isAdmin()) {
             return reservationRepository.findAllByOrderByStartTimeDesc();
         }

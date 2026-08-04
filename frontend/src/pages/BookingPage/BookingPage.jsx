@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from './BookingPage.module.css';
-import { FaCalendarAlt, FaClock, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 
 const BookingPage = () => {
-    const { offerId } = useParams();
+
+    const { packageId } = useParams();
     const navigate = useNavigate();
+
+    const [userPackage, setUserPackage] = useState(null);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [selectedSlot, setSelectedSlot] = useState(null);
@@ -15,13 +18,40 @@ const BookingPage = () => {
     const token = localStorage.getItem('accessToken');
 
     useEffect(() => {
-        fetchSlots();
-    }, [selectedDate]);
+        fetchPackageDetails();
+    }, [packageId]);
 
-    const fetchSlots = async () => {
+    useEffect(() => {
+        if (userPackage) {
+            fetchAndFilterSlots();
+        }
+    }, [selectedDate, userPackage]);
+
+    const fetchPackageDetails = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/packages/my-active`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const packages = await response.json();
+                const currentPkg = packages.find(p => p.id === packageId);
+
+                if (currentPkg) {
+                    setUserPackage(currentPkg);
+                } else {
+                    toast.error("Brak dostępu lub pakiet wygasł");
+                    navigate('/reservations');
+                }
+            }
+        } catch (error) {
+            toast.error("Błąd pobierania informacji o pakiecie");
+        }
+    };
+
+    const fetchAndFilterSlots = async () => {
         setLoading(true);
         try {
-
             const from = new Date(selectedDate);
             from.setHours(0, 0, 0, 0);
             const to = new Date(selectedDate);
@@ -31,8 +61,32 @@ const BookingPage = () => {
                 `http://localhost:8080/api/slots/available?from=${from.toISOString()}&to=${to.toISOString()}`,
                 { headers: { 'Authorization': `Bearer ${token}` } }
             );
-            const data = await response.json();
-            setAvailableSlots(data);
+
+            if (response.ok) {
+                const allSlots = await response.json();
+
+                const normalize = (str) => (str ? str.toString().trim().toLowerCase() : '');
+
+                const isGroupType = (type) => {
+                    const norm = normalize(type);
+                    return norm.includes('group') || norm.includes('grup');
+                };
+
+                const pkgLevel = normalize(userPackage.lessonOffer.level);
+                const isPkgGroup = isGroupType(userPackage.lessonOffer.lessonType);
+
+                const matchingSlots = allSlots.filter(slot => {
+                    const slotLevel = normalize(slot.level);
+                    const isSlotGroup = isGroupType(slot.lessonType);
+
+                    const levelMatches = slotLevel === pkgLevel;
+                    const typeMatches = isSlotGroup === isPkgGroup;
+
+                    return levelMatches && typeMatches;
+                });
+
+                setAvailableSlots(matchingSlots);
+            }
         } catch (error) {
             toast.error("Błąd pobierania terminów");
         } finally {
@@ -41,20 +95,29 @@ const BookingPage = () => {
     };
 
     const handleBooking = async () => {
-        if (!selectedSlot) return;
+        if (!selectedSlot || !userPackage) return;
+
 
         const result = await Swal.fire({
             title: 'Potwierdź rezerwację',
-            text: `Czy chcesz zarezerwować termin ${new Date(selectedSlot.startTime).toLocaleString()}?`,
+            html: `
+                <div style="text-align: left; font-family: sans-serif; font-size: 0.95rem;">
+                    <p>Wybierasz termin dla pakietu: <b>${userPackage.lessonOffer.title}</b></p>
+                    <p>Data zajęć: <b>${new Date(selectedSlot.startTime).toLocaleString()}</b></p>
+                    <p style="color: #777;">Po utworzeniu rezerwacji Twój pakiet zmniejszy się o 1 lekcję.</p>
+                </div>
+            `,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#d28b5b',
+            cancelButtonColor: '#95a5a6',
             confirmButtonText: 'Tak, rezerwuję',
             cancelButtonText: 'Anuluj'
         });
 
         if (result.isConfirmed) {
             try {
+
                 const response = await fetch('http://localhost:8080/api/reservations', {
                     method: 'POST',
                     headers: {
@@ -62,17 +125,17 @@ const BookingPage = () => {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        offerId: offerId,
+                        userPackageId: userPackage.id,
                         slotId: selectedSlot.id
                     })
                 });
 
                 if (response.ok) {
-                    await Swal.fire('Sukces!', 'Twoja lekcja została zarezerwowana.', 'success');
-                    navigate('/profile');
+                    await Swal.fire('Zarezerwowano!', 'Twój termin został pomyślnie dodany.', 'success');
+                    navigate('/reservations');
                 } else {
                     const err = await response.json();
-                    toast.error(err.message || "Błąd rezerwacji");
+                    toast.error(err.message || "Nie udało się zarezerwować terminu.");
                 }
             } catch (error) {
                 toast.error("Błąd połączenia z serwerem");
@@ -92,9 +155,13 @@ const BookingPage = () => {
             <div className={styles.bookingCard}>
                 <header className={styles.header}>
                     <button className={styles.backBtn} onClick={() => navigate(-1)}><FaChevronLeft /> Wróć</button>
-                    <h1 className={styles.titleText}>Wybierz termin</h1>
+                    <h1 className={styles.titleText}>Wybierz termin zajęć</h1>
+                    {userPackage && (
+                        <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#d28b5b', fontWeight: 'bold' }}>
+                            Pakiet: {userPackage.lessonOffer.title} ({userPackage.lessonOffer.level} - {userPackage.lessonOffer.lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'})
+                        </p>
+                    )}
                 </header>
-
 
                 <div className={styles.datePicker}>
                     <button onClick={() => changeDate(-1)} className={styles.navBtn}><FaChevronLeft /></button>
@@ -107,7 +174,7 @@ const BookingPage = () => {
 
                 <div className={styles.slotsGrid}>
                     {loading ? (
-                        <p className={styles.statusMsg}>Szukam wolnych terminów...</p>
+                        <p className={styles.statusMsg}>Szukam zgodnych wolnych terminów...</p>
                     ) : availableSlots.length > 0 ? (
                         availableSlots.map(slot => (
                             <button
@@ -119,14 +186,16 @@ const BookingPage = () => {
                             </button>
                         ))
                     ) : (
-                        <p className={styles.statusMsg}>Brak wolnych terminów na ten dzień.</p>
+                        <p className={styles.statusMsg}>
+                            Brak pasujących wolnych terminów ({userPackage?.lessonOffer.level} / {userPackage?.lessonOffer.lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'}) na ten dzień.
+                        </p>
                     )}
                 </div>
 
                 <footer className={styles.footer}>
                     <div className={styles.selectionInfo}>
                         <p>Wybrany termin:</p>
-                        <strong>{selectedSlot ? new Date(selectedSlot.startTime).toLocaleString() : 'Wybierz godzinę'}</strong>
+                        <strong>{selectedSlot ? new Date(selectedSlot.startTime).toLocaleString() : 'Wybierz godzinę z listy'}</strong>
                     </div>
                     <button
                         className={styles.confirmBtn}
