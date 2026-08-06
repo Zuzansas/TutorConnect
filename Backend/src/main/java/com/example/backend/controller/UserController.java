@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.UUID;
 
@@ -68,6 +69,17 @@ public class UserController {
                         @RequestParam("file") MultipartFile file) {
                 AvatarUploadResponse response = userService.uploadAvatar(userDetails.getUsername(), file);
                 return ResponseEntity.ok(response);
+        }
+
+        @Operation(summary = "Usuń avatar", description = "Usuwa obecne zdjęcie profilowe użytkownika")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Avatar został pomyślnie usunięty"),
+                        @ApiResponse(responseCode = "401", description = "Brak autoryzacji", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        @DeleteMapping("/me/avatar")
+        public ResponseEntity<Void> deleteAvatar(@AuthenticationPrincipal UserDetails userDetails) {
+                userService.deleteAvatar(userDetails.getUsername());
+                return ResponseEntity.noContent().build();
         }
 
         @Operation(summary = "Zaktualizuj lokalizację", description = "Aktualizuje lokalizację użytkownika. Automatycznie wykrywa nazwę miasta z współrzędnych GPS.")

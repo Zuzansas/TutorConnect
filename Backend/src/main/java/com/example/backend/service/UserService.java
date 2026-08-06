@@ -124,6 +124,18 @@ public class UserService {
     }
 
     @Transactional
+    public void deleteAvatar(String username) {
+        User user = findUserByUsername(username);
+
+        if (user.getAvatarURL() != null && !user.getAvatarURL().isEmpty()) {
+            cloudinaryService.deleteImage(user.getAvatarURL());
+
+            user.setAvatarURL(null);
+            userRepository.save(user);
+        }
+    }
+
+    @Transactional
     public LocationUpdateResponse updateLocation(String username, UpdateLocationRequest request) {
         User user = findUserByUsername(username);
 

@@ -21,9 +21,6 @@ const HeaderLoggedIn = ({ setIsDropdownOpen, isDropdownOpen, handleLogout, isAdm
                     <Link to="/profile" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                         <FiUser /> Mój Profil
                     </Link>
-                    <Link to="/settings" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
-                        <FiSettings /> Ustawienia
-                    </Link>
                     <Link to="/reservations" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                         <FiCalendar /> Moje Rezerwacje
                     </Link>

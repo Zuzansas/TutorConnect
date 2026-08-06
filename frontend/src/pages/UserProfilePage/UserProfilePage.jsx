@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './UserProfilePage.module.css';
-import { FaUser, FaEnvelope, FaMapMarkerAlt, FaLock, FaEdit, FaSave, FaTimes, FaPencilAlt, FaExclamationTriangle } from 'react-icons/fa';
-import ImageUpload from '../SignupPage/components/ImageUpload';
 import { City } from 'country-state-city';
+import { toast, ToastContainer } from 'react-toastify'; // <--- IMPORT
+import 'react-toastify/dist/ReactToastify.css';
+
+import ProfileHeader from './components/ProfileHeader';
+import PersonalInfoSection from './components/PersonalInfoSection';
+import LocationSection from './components/LocationSection';
+import SecuritySection from './components/SecuritySection';
+import PasswordModal from './components/PasswordModal';
+import DeactivateModal from './components/DeactivateModal';
 
 const UserProfilePage = () => {
     const [userData, setUserData] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isEditingLocation, setIsEditingLocation] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [message, setMessage] = useState({ type: '', text: '' });
-
 
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
-
 
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
@@ -46,7 +50,7 @@ const UserProfilePage = () => {
                 setCityQuery(data.city || '');
             }
         } catch (error) {
-            console.error("Błąd pobierania profilu:", error);
+            toast.error("Błąd pobierania profilu.");
         } finally {
             setIsLoading(false);
         }
@@ -55,7 +59,7 @@ const UserProfilePage = () => {
     const handleChangePassword = async (e) => {
         e.preventDefault();
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-            setMessage({ type: 'error', text: 'Nowe hasła nie są identyczne!' });
+            toast.error('Nowe hasła nie są identyczne!');
             return;
         }
 
@@ -75,14 +79,14 @@ const UserProfilePage = () => {
 
             const result = await response.json();
             if (response.ok) {
-                setMessage({ type: 'success', text: 'Hasło zostało zmienione!' });
+                toast.success('Hasło zostało zmienione!');
                 setShowPasswordModal(false);
                 setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
             } else {
-                setMessage({ type: 'error', text: result.message || 'Błąd zmiany hasła.' });
+                toast.error(result.message || 'Błąd zmiany hasła.');
             }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Błąd połączenia z serwerem.' });
+            toast.error('Błąd połączenia z serwerem.');
         }
     };
 
@@ -97,11 +101,12 @@ const UserProfilePage = () => {
                 window.location.href = '/login';
             }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Nie udało się deaktywować konta.' });
+            toast.error('Nie udało się deaktywować konta.');
         }
     };
 
     const handleSaveCity = () => { if (cityQuery.trim()) selectCity(cityQuery); };
+
     const handleCityChange = (e) => {
         const value = e.target.value;
         setCityQuery(value);
@@ -113,6 +118,7 @@ const UserProfilePage = () => {
             setShowSuggestions(false);
         }
     };
+
     const selectCity = async (city) => {
         setCityQuery(city);
         setShowSuggestions(false);
@@ -122,9 +128,16 @@ const UserProfilePage = () => {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ city: city })
             });
-            if (response.ok) { fetchProfile(); setIsEditingLocation(false); setMessage({ type: 'success', text: 'Lokalizacja zaktualizowana!' }); }
-        } catch (error) { setMessage({ type: 'error', text: 'Błąd lokalizacji.' }); }
+            if (response.ok) {
+                fetchProfile();
+                setIsEditingLocation(false);
+                toast.success('Lokalizacja zaktualizowana!');
+            }
+        } catch (error) {
+            toast.error('Błąd lokalizacji.');
+        }
     };
+
     const handleAvatarUpdate = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
@@ -134,9 +147,15 @@ const UserProfilePage = () => {
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
-            if (response.ok) { setMessage({ type: 'success', text: 'Avatar zaktualizowany!' }); fetchProfile(); }
-        } catch (error) { setMessage({ type: 'error', text: 'Błąd wgrywania zdjęcia.' }); }
+            if (response.ok) {
+                toast.success('Avatar zaktualizowany!');
+                fetchProfile();
+            }
+        } catch (error) {
+            toast.error('Błąd wgrywania zdjęcia.');
+        }
     };
+
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         try {
@@ -145,163 +164,101 @@ const UserProfilePage = () => {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(profileForm)
             });
-            if (response.ok) { setMessage({ type: 'success', text: 'Profil zaktualizowany!' }); setIsEditing(false); fetchProfile(); }
-        } catch (error) { setMessage({ type: 'error', text: 'Błąd profilu.' }); }
+            if (response.ok) {
+                toast.success('Profil zaktualizowany!');
+                setIsEditing(false);
+                fetchProfile();
+            }
+        } catch (error) {
+            toast.error('Błąd profilu.');
+        }
     };
 
-    if (isLoading) return <div className={styles.loader}>Ładowanie profilu...</div>;
+    const handleRemoveAvatar = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/users/me/avatar', {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                toast.success('Zdjęcie profilowe zostało usunięte!');
+                fetchProfile();
+            } else {
+                toast.error('Błąd podczas usuwania zdjęcia.');
+            }
+        } catch (error) {
+            toast.error('Błąd połączenia z serwerem.');
+        }
+    };
+
+    if (isLoading) return <div className={styles.loader}>Pobieranie danych profilu...</div>;
 
     return (
         <div className={styles.container}>
-            <div className={styles.profileCard}>
-                {message.text && (
-                    <div className={`${styles.alert} ${styles[message.type]}`}>{message.text}</div>
-                )}
+            {/* KONTENER DLA TOASTÓW Z PASIEM POSTĘPU */}
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                pauseOnHover
+            />
 
-                <div className={styles.header}>
-                    <ImageUpload
-                        image={null}
-                        currentImageUrl={userData?.avatarUrl}
-                        onImageChange={handleAvatarUpdate}
-                        onRemoveImage={() => { }}
-                    />
-                    <h1>{userData?.fullName}</h1>
-                    <p className={styles.username}>@{userData?.email.split('@')[0]}</p>
-                </div>
-
-                <div className={styles.section}>
-                    <div className={styles.sectionHeader}>
-                        <h3><FaUser /> Dane osobowe</h3>
-                        {!isEditing ? (
-                            <button className={styles.editBtn} onClick={() => setIsEditing(true)}>
-                                <FaEdit /> Edytuj dane
-                            </button>
-                        ) : (
-                            <div className={styles.editActions}>
-                                <button className={styles.saveBtn} onClick={handleUpdateProfile}><FaSave /> Zapisz</button>
-                                <button className={styles.cancelBtn} onClick={() => setIsEditing(false)}><FaTimes /></button>
-                            </div>
-                        )}
+            <div className={styles.profileWrapper}>
+                <div className={styles.profileGrid}>
+                    <div className={styles.leftColumn}>
+                        <ProfileHeader
+                            userData={userData}
+                            handleAvatarUpdate={handleAvatarUpdate}
+                            handleRemoveAvatar={handleRemoveAvatar}
+                        />
                     </div>
 
-                    <div className={styles.infoGrid}>
-                        <div className={styles.infoItem}>
-                            <label>Imię i nazwisko</label>
-                            {isEditing ? (
-                                <input className={styles.editInput} value={profileForm.fullName} onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })} />
-                            ) : <span className={styles.infoText}>{userData?.fullName}</span>}
-                        </div>
+                    <div className={styles.rightColumn}>
+                        <PersonalInfoSection
+                            userData={userData}
+                            isEditing={isEditing}
+                            setIsEditing={setIsEditing}
+                            profileForm={profileForm}
+                            setProfileForm={setProfileForm}
+                            handleUpdateProfile={handleUpdateProfile}
+                        />
 
-                        <div className={styles.bioSection}>
-                            <label>O mnie (Bio)</label>
-                            {isEditing ? (
-                                <textarea className={styles.editTextarea} value={profileForm.bio} onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} />
-                            ) : <p className={styles.bioText}>{userData?.bio || 'Brak opisu...'}</p>}
-                        </div>
+                        <LocationSection
+                            userData={userData}
+                            isEditingLocation={isEditingLocation}
+                            setIsEditingLocation={setIsEditingLocation}
+                            cityQuery={cityQuery}
+                            handleCityChange={handleCityChange}
+                            handleSaveCity={handleSaveCity}
+                            showSuggestions={showSuggestions}
+                            filteredCities={filteredCities}
+                            selectCity={selectCity}
+                        />
 
-                        <div className={styles.infoItem}>
-                            <label><FaEnvelope /> Email</label>
-                            <span className={styles.infoText}>{userData?.email}</span>
-                        </div>
-
-                        <div className={styles.infoItem} style={{ marginTop: '15px' }}>
-                            <label>
-                                <FaMapMarkerAlt /> Lokalizacja
-                                {!isEditingLocation && (
-                                    <FaPencilAlt className={styles.miniEditIcon} onClick={() => setIsEditingLocation(true)} />
-                                )}
-                            </label>
-                            {isEditingLocation ? (
-                                <div className={styles.citySearchContainer}>
-                                    <input type="text" className={styles.editInput} value={cityQuery} onChange={handleCityChange} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleSaveCity()} />
-                                    {showSuggestions && filteredCities.length > 0 && (
-                                        <ul className={styles.suggestionsList}>
-                                            {filteredCities.map((city, index) => (
-                                                <li key={index} onClick={() => selectCity(city)}>{city}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                    <div className={styles.locationActions}>
-                                        <button className={styles.saveSmall} onClick={handleSaveCity}><FaSave /> Zapisz</button>
-                                        <button className={styles.cancelIconBtn} onClick={() => setIsEditingLocation(false)}><FaTimes /></button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <span className={styles.infoText}>{userData?.city || 'Nie podano'}</span>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className={`${styles.section} ${styles.securitySection}`}>
-                    <h3><FaLock /> Bezpieczeństwo</h3>
-                    <div className={styles.securityButtons}>
-                        <button className={styles.outlineBtn} onClick={() => setShowPasswordModal(true)}>
-                            Zmień hasło
-                        </button>
-                        <button className={styles.dangerBtn} onClick={() => setShowDeactivateModal(true)}>
-                            Deaktywuj konto
-                        </button>
+                        <SecuritySection
+                            setShowPasswordModal={setShowPasswordModal}
+                            setShowDeactivateModal={setShowDeactivateModal}
+                        />
                     </div>
                 </div>
             </div>
 
-            {showPasswordModal && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        <div className={styles.modalHeader}>
-                            <h2>Zmień hasło</h2>
-                            <button onClick={() => setShowPasswordModal(false)} className={styles.closeModal}><FaTimes /></button>
-                        </div>
-                        {message.text && message.type === 'error' && (
-                            <div className={styles.modalError}>{message.text}</div>
-                        )}
-                        <form onSubmit={handleChangePassword}>
-                            <div className={styles.inputGroupModal}>
-                                <label>Aktualne hasło</label>
-                                <input
-                                    type="password" required
-                                    value={passwordForm.currentPassword}
-                                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                                />
-                            </div>
-                            <div className={styles.inputGroupModal}>
-                                <label>Nowe hasło</label>
-                                <input
-                                    type="password" required
-                                    value={passwordForm.newPassword}
-                                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                                />
-                            </div>
-                            <div className={styles.inputGroupModal}>
-                                <label>Powtórz nowe hasło</label>
-                                <input
-                                    type="password" required
-                                    value={passwordForm.confirmPassword}
-                                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                                />
-                            </div>
-                            <button type="submit" className={styles.saveBtnFull}>Zapisz nowe hasło</button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <PasswordModal
+                showPasswordModal={showPasswordModal}
+                setShowPasswordModal={setShowPasswordModal}
+                passwordForm={passwordForm}
+                setPasswordForm={setPasswordForm}
+                handleChangePassword={handleChangePassword}
+            />
 
-            {showDeactivateModal && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        <div className={styles.deactivateHeader}>
-                            <FaExclamationTriangle size={40} color="#e74c3c" />
-                            <h2>Czy na pewno?</h2>
-                        </div>
-                        <p>Deaktywacja konta jest nieodwracalna. Twój profil nie będzie widoczny dla innych.</p>
-                        <div className={styles.modalActions}>
-                            <button className={styles.dangerBtnFull} onClick={handleDeactivate}>Tak, deaktywuj konto</button>
-                            <button className={styles.cancelBtnFull} onClick={() => setShowDeactivateModal(false)}>Anuluj</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <DeactivateModal
+                showDeactivateModal={showDeactivateModal}
+                setShowDeactivateModal={setShowDeactivateModal}
+                handleDeactivate={handleDeactivate}
+            />
         </div>
     );
 };
