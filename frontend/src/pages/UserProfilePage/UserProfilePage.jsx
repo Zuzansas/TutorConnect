@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './UserProfilePage.module.css';
 import { City } from 'country-state-city';
-import { toast, ToastContainer } from 'react-toastify'; // <--- IMPORT
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import ProfileHeader from './components/ProfileHeader';
@@ -10,6 +10,19 @@ import LocationSection from './components/LocationSection';
 import SecuritySection from './components/SecuritySection';
 import PasswordModal from './components/PasswordModal';
 import DeactivateModal from './components/DeactivateModal';
+
+const sanitizeInput = (input) => {
+    if (typeof input !== 'string') return input;
+    return input
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/javascript:/gi, '')
+        .replace(/onerror=/gi, '')
+        .replace(/onload=/gi, '')
+        .trim();
+};
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 const UserProfilePage = () => {
     const [userData, setUserData] = useState(null);
@@ -40,14 +53,19 @@ const UserProfilePage = () => {
 
     const fetchProfile = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/users/me', {
+            const response = await fetch(`${API_BASE_URL}/users/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
                 const data = await response.json();
                 setUserData(data);
-                setProfileForm({ fullName: data.fullName, bio: data.bio });
+                setProfileForm({
+                    fullName: data.fullName || '',
+                    bio: data.bio || ''
+                });
                 setCityQuery(data.city || '');
+            } else if (response.status === 401) {
+                toast.error("Sesja wygasła. Zaloguj się ponownie.");
             }
         } catch (error) {
             toast.error("Błąd pobierania profilu.");
@@ -58,13 +76,20 @@ const UserProfilePage = () => {
 
     const handleChangePassword = async (e) => {
         e.preventDefault();
+
+
+        if (passwordForm.newPassword.length < 8) {
+            toast.error('Nowe hasło musi mieć co najmniej 8 znaków.');
+            return;
+        }
+
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
             toast.error('Nowe hasła nie są identyczne!');
             return;
         }
 
         try {
-            const response = await fetch('http://localhost:8080/api/users/me/password', {
+            const response = await fetch(`${API_BASE_URL}/users/me/password`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -92,7 +117,7 @@ const UserProfilePage = () => {
 
     const handleDeactivate = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/users/me/deactivate', {
+            const response = await fetch(`${API_BASE_URL}/users/me/deactivate`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -105,10 +130,12 @@ const UserProfilePage = () => {
         }
     };
 
-    const handleSaveCity = () => { if (cityQuery.trim()) selectCity(cityQuery); };
+    const handleSaveCity = () => {
+        if (cityQuery.trim()) selectCity(sanitizeInput(cityQuery));
+    };
 
     const handleCityChange = (e) => {
-        const value = e.target.value;
+        const value = sanitizeInput(e.target.value);
         setCityQuery(value);
         if (value.length >= 2) {
             const filtered = allPolishCities.filter(city => city.toLowerCase().includes(value.toLowerCase())).slice(0, 10);
@@ -120,13 +147,14 @@ const UserProfilePage = () => {
     };
 
     const selectCity = async (city) => {
-        setCityQuery(city);
+        const cleanCity = sanitizeInput(city);
+        setCityQuery(cleanCity);
         setShowSuggestions(false);
         try {
-            const response = await fetch('http://localhost:8080/api/users/me/location', {
+            const response = await fetch(`${API_BASE_URL}/users/me/location`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ city: city })
+                body: JSON.stringify({ city: cleanCity })
             });
             if (response.ok) {
                 fetchProfile();
@@ -139,10 +167,20 @@ const UserProfilePage = () => {
     };
 
     const handleAvatarUpdate = async (file) => {
+        if (!file.type.startsWith('image/')) {
+            toast.error('Dopuszczalne są tylko pliki graficzne!');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Maksymalny rozmiar zdjęcia to 5 MB.');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
         try {
-            const response = await fetch('http://localhost:8080/api/users/me/avatar', {
+            const response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
@@ -158,11 +196,28 @@ const UserProfilePage = () => {
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
+
+        const cleanFullName = sanitizeInput(profileForm.fullName);
+        const cleanBio = sanitizeInput(profileForm.bio);
+
+        if (!cleanFullName) {
+            toast.error('Imię i nazwisko nie może być puste.');
+            return;
+        }
+
+        if (cleanBio.length > 500) {
+            toast.error('Bio nie może przekraczać 500 znaków.');
+            return;
+        }
+
         try {
-            const response = await fetch('http://localhost:8080/api/users/me', {
+            const response = await fetch(`${API_BASE_URL}/users/me`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(profileForm)
+                body: JSON.stringify({
+                    fullName: cleanFullName,
+                    bio: cleanBio
+                })
             });
             if (response.ok) {
                 toast.success('Profil zaktualizowany!');
@@ -176,7 +231,7 @@ const UserProfilePage = () => {
 
     const handleRemoveAvatar = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/users/me/avatar', {
+            const response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -196,7 +251,6 @@ const UserProfilePage = () => {
 
     return (
         <div className={styles.container}>
-            {/* KONTENER DLA TOASTÓW Z PASIEM POSTĘPU */}
             <ToastContainer
                 position="top-right"
                 autoClose={5000}
