@@ -15,8 +15,8 @@ const MainElementsNavigation = () => {
 
             <nav className={styles.headerCenter}>
                 <Link to="/offers" className={styles.navLink}><FiBookOpen className={styles.icon} /> Oferta</Link>
-                <a href="#teaching" className={styles.navLink}><LuGraduationCap className={styles.icon} /> Jak to działa?</a>
-                <a href="#support" className={styles.navLink}><FiHeadphones className={styles.icon} /> Kontakt</a>
+                <Link to="/how-it-works" className={styles.navLink}><LuGraduationCap className={styles.icon} /> Jak to działa?</Link>
+                <Link to="/contact" className={styles.navLink}><FiHeadphones className={styles.icon} /> Kontakt</Link>
             </nav>
         </>
     )

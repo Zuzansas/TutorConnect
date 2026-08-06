@@ -65,37 +65,106 @@ const AdminCalendarPage = () => {
     };
 
     const handleSelect = async (selectInfo) => {
-        const { value: formValues } = await Swal.fire({
-            title: 'Nowy termin w kalendarzu',
-            html: `
-            <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; font-family: sans-serif;">
-                <p style="margin: 0; font-size: 0.9rem; color: #555;">Od: <b>${selectInfo.start.toLocaleString()}</b></p>
-                <p style="margin: 0; font-size: 0.9rem; color: #555;">Do: <b>${selectInfo.end.toLocaleString()}</b></p>
-                
-                <label style="font-size: 0.8rem; font-weight: 700; color: #d28b5b; margin-top: 5px;">POZIOM ZAAVANSE'OWANIA</label>
-                <select id="swal-slot-level" class="swal2-select" style="margin: 0; width: 100%;">
-                    <option value="Podstawowy">Poziom Podstawowy</option>
-                    <option value="Średni">Poziom Średniozaawansowany</option>
-                    <option value="Rozszerzony">Poziom Rozszerzony/Matura</option>
-                </select>
+        let selectedLevel = 'Podstawowy';
+        let selectedType = 'INDIVIDUAL';
 
-                <label style="font-size: 0.8rem; font-weight: 700; color: #d28b5b; margin-top: 5px;">TYP ZAJĘĆ</label>
-                <select id="swal-slot-type" class="swal2-select" style="margin: 0; width: 100%;">
-                    <option value="INDIVIDUAL">Indywidualne</option>
-                    <option value="GROUP">Grupowe</option>
-                </select>
+        const { value: formValues } = await Swal.fire({
+            title: '<span style="color: #2c3e50; font-size: 1.3rem; font-weight: 800;">Dodaj termin do kalendarza</span>',
+            html: `
+            <div style="display: flex; flex-direction: column; gap: 16px; text-align: left; font-family: 'Inter', sans-serif; padding-top: 5px;">
+                
+                <!-- PODSUMOWANIE GODZIN -->
+                <div style="background: #fdfaf8; border: 1px solid #f1ece8; padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.85rem; color: #7f8c8d;">
+                        <i class="far fa-calendar-alt" style="color: #d28b5b; margin-right: 5px;"></i>
+                        <b>${selectInfo.start.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}</b>
+                    </div>
+                    <div style="font-size: 0.9rem; font-weight: 700; color: #d28b5b;">
+                        ${selectInfo.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${selectInfo.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                </div>
+
+                <!-- SEKCJA 1: POZIOM ZAJĘĆ -->
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+                        Poziom zaawansowania
+                    </label>
+                    <div id="level-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        <div data-val="Podstawowy" class="swal-option-card active-option" style="padding: 10px 8px; border: 2px solid #d28b5b; background: #fdf2eb; color: #d28b5b; border-radius: 10px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: all 0.2s;">
+                            Podstawowy
+                        </div>
+                        <div data-val="Średni" class="swal-option-card" style="padding: 10px 8px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 10px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: all 0.2s;">
+                            Średni
+                        </div>
+                        <div data-val="Rozszerzony" class="swal-option-card" style="padding: 10px 8px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 10px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: all 0.2s;">
+                            Rozszerzony
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEKCJA 2: TYP ZAJĘĆ -->
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+                        Typ zajęć
+                    </label>
+                    <div id="type-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div data-val="INDIVIDUAL" class="swal-type-card active-type" style="padding: 12px; border: 2px solid #d28b5b; background: #fdf2eb; color: #d28b5b; border-radius: 12px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                            <i class="fas fa-user"></i> Indywidualne
+                        </div>
+                        <div data-val="GROUP" class="swal-type-card" style="padding: 12px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 12px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                            <i class="fas fa-users"></i> Grupowe
+                        </div>
+                    </div>
+                </div>
+
             </div>
             `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonColor: '#d28b5b',
             cancelButtonColor: '#95a5a6',
-            confirmButtonText: 'Dodaj slot',
+            confirmButtonText: '<i class="fas fa-check"></i> Utwórz slot',
             cancelButtonText: 'Anuluj',
+            width: '420px',
+            customClass: {
+                popup: styles.swalSoftPopup
+            },
+            didOpen: () => {
+                // LOGIKA KLIKANIA KAFELKÓW POZIOMU
+                const levelCards = document.querySelectorAll('#level-options .swal-option-card');
+                levelCards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        levelCards.forEach(c => {
+                            c.style.borderColor = '#e9ecef';
+                            c.style.background = '#fff';
+                            c.style.color = '#555';
+                        });
+                        card.style.borderColor = '#d28b5b';
+                        card.style.background = '#fdf2eb';
+                        card.style.color = '#d28b5b';
+                        selectedLevel = card.getAttribute('data-val');
+                    });
+                });
+
+                const typeCards = document.querySelectorAll('#type-options .swal-type-card');
+                typeCards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        typeCards.forEach(c => {
+                            c.style.borderColor = '#e9ecef';
+                            c.style.background = '#fff';
+                            c.style.color = '#555';
+                        });
+                        card.style.borderColor = '#d28b5b';
+                        card.style.background = '#fdf2eb';
+                        card.style.color = '#d28b5b';
+                        selectedType = card.getAttribute('data-val');
+                    });
+                });
+            },
             preConfirm: () => {
                 return {
-                    level: document.getElementById('swal-slot-level').value,
-                    lessonType: document.getElementById('swal-slot-type').value
+                    level: selectedLevel,
+                    lessonType: selectedType
                 };
             }
         });
@@ -117,7 +186,7 @@ const AdminCalendarPage = () => {
                 });
 
                 if (response.ok) {
-                    toast.success("Termin został dodany!");
+                    toast.success("Termin został pomyślnie utworzony!");
                     fetchData(selectInfo.view.activeStart, selectInfo.view.activeEnd);
                 } else {
                     const errData = await response.json();

@@ -13,6 +13,8 @@ import UserProfilePage from './pages/UserProfilePage/UserProfilePage';
 import AdminCalendarPage from './pages/AdminCalendarPage/AdminCalendarPage';
 import BookingPage from './pages/BookingPage/BookingPage';
 import ReservationsPage from './pages/ReservationsPage/ReservationsPage.jsx';
+import HowItWorksPage from './pages/HowItWorksPage/HowItWorksPage.jsx';
+import ContactPage from './pages/ContactPage/ContactPage.jsx';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
           <Route path="/" element={<FeatureSection />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/offers" element={<OffersPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/offer/:id" element={<OfferDetailsPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/add-offer" element={<AddOfferPage />} />

@@ -13,7 +13,11 @@ import {
     FaBoxOpen,
     FaCalendarPlus,
     FaUser,
-    FaUsers
+    FaUsers,
+    FaGraduationCap,
+    FaUserShield,
+    FaCalendarAlt,
+    FaHistory
 } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { toast, ToastContainer } from 'react-toastify';
@@ -26,6 +30,7 @@ const ReservationsPage = () => {
     const [userReviews, setUserReviews] = useState([]);
     const [materials, setMaterials] = useState({});
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'past'
 
     const token = localStorage.getItem('accessToken');
     const userId = localStorage.getItem('userId');
@@ -44,7 +49,9 @@ const ReservationsPage = () => {
         ]);
         setLoading(false);
     };
+
     const fetchUserPackages = async () => {
+        if (userRole === 'ADMIN') return;
         try {
             const response = await fetch('http://localhost:8080/api/packages/my-active', {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -64,8 +71,7 @@ const ReservationsPage = () => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
-            const sorted = data.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
-            setReservations(sorted);
+            setReservations(data);
         } catch (error) {
             toast.error("Nie udało się pobrać rezerwacji.");
         }
@@ -240,21 +246,30 @@ const ReservationsPage = () => {
         }
     };
 
-    const handleCancel = async (id) => {
+    const handleCancel = async (reservation) => {
+        const now = new Date();
+        const startTime = new Date(reservation.startTime);
+        const diffInHours = (startTime - now) / (1000 * 60 * 60);
+        const isLate = diffInHours < 12;
+
         const result = await Swal.fire({
             title: 'Czy na pewno chcesz odwołać lekcję?',
-            text: '1 lekcja zostanie zwrócona do Twojego pakietu (jeśli odwołujesz min. 12h przed zajęciami).',
-            icon: 'warning',
+            html: isLate
+                ? '<b style="color: #e74c3c;">Uwaga! Do zajęć zostało mniej niż 12h.</b><br/>Lekcja zostanie odwołana, ale <b style="color: #e74c3c;">NIE otrzymają Państwo zwrotu</b> lekcji do pakietu.'
+                : 'Do zajęć zostało więcej niż 12h. Po odwołaniu <b>1 lekcja zostanie zwrócona</b> do Twojego pakietu.',
+            icon: isLate ? 'warning' : 'question',
             showCancelButton: true,
             confirmButtonColor: '#e74c3c',
-            confirmButtonText: 'Tak, odwołaj'
+            cancelButtonColor: '#95a5a6',
+            confirmButtonText: 'Tak, odwołaj',
+            cancelButtonText: 'Wróć'
         });
 
         if (result.isConfirmed) {
             try {
                 let url = userRole === 'ADMIN'
-                    ? `http://localhost:8080/api/reservations/${id}`
-                    : `http://localhost:8080/api/reservations/${id}/cancel`;
+                    ? `http://localhost:8080/api/reservations/${reservation.id}`
+                    : `http://localhost:8080/api/reservations/${reservation.id}/cancel`;
                 let method = userRole === 'ADMIN' ? 'DELETE' : 'POST';
 
                 const response = await fetch(url, {
@@ -263,8 +278,9 @@ const ReservationsPage = () => {
                 });
 
                 if (response.ok) {
-                    toast.success("Anulowano rezerwację. Stan pakietu został zaktualizowany.");
-                    fetchInitialData(); // Odświeżamy rezerwacje i pakiet!
+                    const resData = await response.json();
+                    toast.success(resData.message || "Anulowano rezerwację.");
+                    fetchInitialData();
                 } else {
                     const err = await response.json();
                     toast.error(err.message || "Błąd podczas odwoływania.");
@@ -283,19 +299,51 @@ const ReservationsPage = () => {
         }
     };
 
+    // LOGIKA PODZIAŁU I SORTOWANIA LEKCJI
+    const now = new Date();
+
+    // Nadchodzące: Aktywne i zaplanowane po czasie 'now' (sortowanie od najbliższej do najdalszej)
+    const upcomingReservations = reservations
+        .filter(res => new Date(res.startTime) >= now && res.status !== 'CANCELLED')
+        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+    // Odbyte / Anulowane: Wykonane, anulowane lub w przeszłości (sortowanie od najnowszych)
+    const pastReservations = reservations
+        .filter(res => new Date(res.startTime) < now || res.status === 'CANCELLED')
+        .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+    const displayedReservations = activeTab === 'upcoming' ? upcomingReservations : pastReservations;
+
     if (loading) return <div className={styles.loader}>Pobieranie Twoich zajęć...</div>;
 
     return (
         <div className={styles.container}>
             <ToastContainer />
 
-            {/* NAGŁÓWEK */}
-            <div className={styles.headerSection}>
-                <h1><FaCalendarCheck /> Twoje Konto Lekcji i Rezerwacje</h1>
-                <p>Zarządzaj swoimi pakietami oraz terminami zajęć</p>
+            {/* HERO SECTION */}
+            <div className={styles.heroSection}>
+                <div className={styles.badge}>
+                    {userRole === 'ADMIN' ? <FaUserShield /> : <FaGraduationCap />}
+                    <span>{userRole === 'ADMIN' ? 'Panel Edukatora' : 'Strefa Ucznia'}</span>
+                </div>
+
+                <h1 className={styles.heroTitle}>
+                    {userRole === 'ADMIN' ? (
+                        <>Zarządzanie <span className={styles.gradientText}>Lekcjami</span> i Terminarzem</>
+                    ) : (
+                        <>Twoje Centrum <span className={styles.gradientText}>Naukowe</span> i Rezerwacje</>
+                    )}
+                </h1>
+
+                <p className={styles.heroSubtitle}>
+                    {userRole === 'ADMIN'
+                        ? 'Kontroluj zaplanowane korepetycje, udostępniaj materiały dydaktyczne i pobieraj pliki.'
+                        : 'Planuj dogodne terminy w kalendarzu, śledź pozostałe lekcje i korzystaj z udostępnionych materiałów.'
+                    }
+                </p>
             </div>
 
-
+            {/* SEKCJA PAKIETÓW DLA UCZNIA */}
             {userRole !== 'ADMIN' && (
                 <div style={{ marginBottom: '40px' }}>
                     <h2 style={{ fontSize: '1.3rem', color: '#d28b5b', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -313,7 +361,7 @@ const ReservationsPage = () => {
                                     border: '1px solid #f1ece8',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    justify: 'space-between',
+                                    justifyContent: 'space-between',
                                     gap: '12px'
                                 }}>
                                     <div>
@@ -381,67 +429,82 @@ const ReservationsPage = () => {
                     )}
                 </div>
             )}
-            <h2 style={{ fontSize: '1.3rem', color: '#2c3e50', marginBottom: '15px' }}>
-                Zaplanowane i Odbyte Zajęcia
-            </h2>
 
-            <div className={styles.timeline}>
-                {reservations.length > 0 ? (
-                    reservations.map((res) => {
+            {/* SEKCJA SELEKCJI ZAKŁADEK (TABS) */}
+            <div className={styles.tabsHeader}>
+                <div className={styles.tabsContainer}>
+                    <button
+                        className={`${styles.tabBtn} ${activeTab === 'upcoming' ? styles.activeTab : ''}`}
+                        onClick={() => setActiveTab('upcoming')}
+                    >
+                        <FaCalendarAlt /> Zaplanowane Zajęcia ({upcomingReservations.length})
+                    </button>
+                    <button
+                        className={`${styles.tabBtn} ${activeTab === 'past' ? styles.activeTab : ''}`}
+                        onClick={() => setActiveTab('past')}
+                    >
+                        <FaHistory /> Zakończone i Odwołane ({pastReservations.length})
+                    </button>
+                </div>
+            </div>
+
+            {/* SIATKA KART ZAMIAST POJEDYNCZEJ KOLUMNY */}
+            <div className={styles.cardsGrid}>
+                {displayedReservations.length > 0 ? (
+                    displayedReservations.map((res) => {
                         const isPast = new Date(res.startTime) < new Date();
                         const existingReview = getExistingReview(res.lessonOfferId);
 
                         return (
                             <div key={res.id} className={`${styles.resCard} ${isPast ? styles.past : ''}`}>
-                                <div className={styles.resMain}>
-                                    <div className={styles.dateInfo}>
+                                <div className={styles.resHeader}>
+                                    <div className={styles.dateBadge}>
                                         <span className={styles.day}>{new Date(res.startTime).getDate()}</span>
                                         <span className={styles.month}>
                                             {new Date(res.startTime).toLocaleString('pl-PL', { month: 'short' })}
                                         </span>
                                     </div>
-
-                                    <div className={styles.details}>
-                                        <h3>{res.lessonTitle}</h3>
-                                        <p className={styles.time}>
-                                            <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                        <p className={styles.student}>Uczeń: <strong>{res.studentName}</strong></p>
-                                    </div>
-
                                     <div className={styles.statusBadge} data-status={res.status}>
-                                        {res.status}
+                                        {res.status === 'CONFIRMED' ? 'Zatwierdzona' : res.status === 'COMPLETED' ? 'Zakończona' : 'Anulowana'}
                                     </div>
+                                </div>
 
-                                    <div className={styles.actions}>
-                                        <button onClick={() => toggleExpand(res.id)} className={styles.materialsBtn}>
-                                            {expandedRes === res.id ? <FaChevronUp /> : <FaFolderOpen />} Materiały
+                                <div className={styles.resBody}>
+                                    <h3 className={styles.resTitle}>{res.lessonTitle}</h3>
+                                    <p className={styles.timeInfo}>
+                                        <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    <p className={styles.studentInfo}>Uczeń: <strong>{res.studentName}</strong></p>
+                                </div>
+
+                                <div className={styles.resFooter}>
+                                    <button onClick={() => toggleExpand(res.id)} className={styles.materialsBtn}>
+                                        {expandedRes === res.id ? <FaChevronUp /> : <FaFolderOpen />} Materiały
+                                    </button>
+
+                                    {isPast && res.status === 'COMPLETED' && userRole !== 'ADMIN' && (
+                                        existingReview ? (
+                                            <button onClick={() => handleDeleteReview(existingReview.id)} className={styles.deleteReviewBtn}>
+                                                <FaStar /> Usuń opinię
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => handleAddReview(res)} className={styles.addReviewBtn}>
+                                                <FaStar /> Oceń
+                                            </button>
+                                        )
+                                    )}
+
+                                    {userRole === 'ADMIN' && (
+                                        <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn} title="Dodaj materiały">
+                                            <FaPlus />
                                         </button>
-                                        {isPast && res.status === 'COMPLETED' && userRole !== 'ADMIN' && (
-                                            existingReview ? (
-                                                <button onClick={() => handleDeleteReview(existingReview.id)} className={styles.deleteReviewBtn}>
-                                                    <FaStar /> <FaTrashAlt />
-                                                </button>
-                                            ) : (
-                                                <button onClick={() => handleAddReview(res)} className={styles.addReviewBtn}>
-                                                    <FaStar /> Oceń
-                                                </button>
-                                            )
-                                        )}
+                                    )}
 
-                                        {userRole === 'ADMIN' && (
-                                            <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn}>
-                                                <FaPlus />
-                                            </button>
-                                        )}
-
-                                        {res.status !== 'CANCELLED' && (userRole === 'ADMIN' || !isPast) && (
-                                            <button onClick={() => handleCancel(res.id)} className={styles.cancelBtn}>
-                                                <FaTrashAlt />
-                                            </button>
-                                        )}
-                                    </div>
+                                    {res.status !== 'CANCELLED' && (userRole === 'ADMIN' || !isPast) && (
+                                        <button onClick={() => handleCancel(res)} className={styles.cancelBtn} title="Odwołaj">
+                                            <FaTrashAlt />
+                                        </button>
+                                    )}
                                 </div>
 
                                 {expandedRes === res.id && (
@@ -457,13 +520,20 @@ const ReservationsPage = () => {
                                                     </li>
                                                 ))}
                                             </ul>
-                                        ) : <p>Brak materiałów.</p>}
+                                        ) : <p className={styles.noMaterials}>Brak załączonych materiałów.</p>}
                                     </div>
                                 )}
                             </div>
                         );
                     })
-                ) : <div className={styles.emptyState}>Brak zarezerwowanych lekcji.</div>}
+                ) : (
+                    <div className={styles.emptyState}>
+                        {activeTab === 'upcoming'
+                            ? 'Brak zaplanowanych lekcji na najbliższy czas. Rezerwuj terminy z wykupionego pakietu!'
+                            : 'Brak historii zakończonych lub odwołanych zajęć.'
+                        }
+                    </div>
+                )}
             </div>
         </div>
     );
