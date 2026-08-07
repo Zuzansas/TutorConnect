@@ -4,48 +4,35 @@ import { FaUser, FaUsers } from 'react-icons/fa';
 import { useState } from 'react';
 import LoginModal from '../../../components/LoginModal/LoginModal';
 import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom';
 
 const PriceInfo = ({ pricePerHour, duration, totalLessons, offerId, lessonType }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const navigate = useNavigate();
-
-    const checkAuthAndPurchase = () => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-            executePurchase(token);
-        }
-    };
 
     const executePurchase = async (token) => {
         const confirm = await Swal.fire({
-            title: 'Potwierdzenie zakupu',
+            title: 'Przejście do płatności',
             html: `
                 <div style="text-align: left; font-family: sans-serif; font-size: 0.95rem; line-height: 1.6;">
-                    <p>Czy chcesz wykupić ten pakiet lekcji?</p>
+                    <p>Zostaniesz przekierowany do bezpiecznej płatności Stripe za pakiet:</p>
                     <ul style="color: #555; padding-left: 20px;">
-                        <li>Liczba lekcji w pakiecie: <b>${totalLessons || 4} lekcji</b></li>
-                        <li>Typ zajęć: <b>${lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'}</b></li>
+                        <li>Liczba lekcji: <b>${totalLessons || 4} lekcji</b></li>
                         <li>Łączna cena: <b>${pricePerHour} PLN</b></li>
                     </ul>
                 </div>
             `,
-            icon: 'question',
+            icon: 'info',
             showCancelButton: true,
             confirmButtonColor: '#2ecc71',
             cancelButtonColor: '#95a5a6',
-            confirmButtonText: 'Kupuję pakiet',
-            cancelButtonText: 'Anuluj',
-            customClass: {
-                popup: styles.swalSoftPopup
-            }
+            confirmButtonText: 'Zapłać teraz',
+            cancelButtonText: 'Anuluj'
         });
 
         if (confirm.isConfirmed) {
             try {
                 setIsSubmitting(true);
-                const response = await fetch(`http://localhost:8080/api/packages/purchase/${offerId}`, {
+                const response = await fetch(`http://localhost:8080/api/packages/create-checkout-session/${offerId}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -54,30 +41,24 @@ const PriceInfo = ({ pricePerHour, duration, totalLessons, offerId, lessonType }
                 });
 
                 if (response.ok) {
-                    await Swal.fire({
-                        title: 'Zakup zakończony sukcesem!',
-                        text: 'Pakiet trafił na Twoje konto. Przejdź do zakładki rezerwacji, aby wybrać terminy w kalendarzu.',
-                        icon: 'success',
-                        confirmButtonColor: '#d28b5b',
-                        confirmButtonText: 'Moje Rezerwacje'
+                    const data = await response.json();
+                    window.location.href = data.checkoutUrl;
+                } else if (response.status === 401) {
+                    // ⬇️ Token wygasł lub jest niepoprawny
+                    localStorage.removeItem('accessToken'); // Czyścimy stary token
+                    Swal.fire({
+                        title: 'Sesja wygasła',
+                        text: 'Zaloguj się ponownie, aby dokończyć zakup.',
+                        icon: 'warning'
+                    }).then(() => {
+                        setIsModalOpen(true); // Otwiera modal logowania
                     });
-                    navigate('/reservations');
                 } else {
                     const err = await response.json();
-                    Swal.fire({
-                        title: 'Błąd zakupu',
-                        text: err.message || 'Coś poszło nie tak podczas zakupu pakietu.',
-                        icon: 'error',
-                        confirmButtonColor: '#e74c3c'
-                    });
+                    Swal.fire('Błąd', err.message || 'Nie udało się rozpocząć płatności.', 'error');
                 }
             } catch (error) {
-                Swal.fire({
-                    title: 'Błąd połączenia',
-                    text: 'Nie udało się połączyć z serwerem.',
-                    icon: 'error',
-                    confirmButtonColor: '#e74c3c'
-                });
+                Swal.fire('Błąd połączenia', 'Nie udało się połączyć z serwerem.', 'error');
             } finally {
                 setIsSubmitting(false);
             }
@@ -87,23 +68,7 @@ const PriceInfo = ({ pricePerHour, duration, totalLessons, offerId, lessonType }
     const handleBookingClick = () => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            Swal.fire({
-                title: 'Wymagane logowanie',
-                text: 'Aby zakupić pakiet lekcji, musisz być zalogowany w naszym serwisie.',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonColor: '#d28b5b',
-                cancelButtonColor: '#95a5a6',
-                confirmButtonText: 'Zaloguj się',
-                cancelButtonText: 'Anuluj',
-                customClass: {
-                    popup: styles.swalSoftPopup
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    setIsModalOpen(true);
-                }
-            });
+            setIsModalOpen(true);
         } else {
             executePurchase(token);
         }
@@ -117,33 +82,18 @@ const PriceInfo = ({ pricePerHour, duration, totalLessons, offerId, lessonType }
                     <span className={styles.unit}>Pakiet {totalLessons || 4}x {duration || 60} min</span>
                 </div>
 
-                <div className={styles.infoRow} style={{ marginTop: '10px' }}>
-                    {lessonType === 'GROUP' ? <FaUsers color="#d28b5b" /> : <FaUser color="#d28b5b" />}
-                    <span>{lessonType === 'GROUP' ? 'Zajęcia Grupowe' : 'Zajęcia Indywidualne'}</span>
-                </div>
-
-                <div className={styles.infoRow}>
-                    <FiMapPin /> <span>Łódź / Online</span>
-                </div>
-
                 <button
                     className={styles.contactBtn}
                     onClick={handleBookingClick}
                     disabled={isSubmitting}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
-                    <FiShoppingCart /> {isSubmitting ? 'Przetwarzanie...' : 'Kup pakiet lekcji'}
+                    <FiShoppingCart /> {isSubmitting ? 'Inicjalizacja płatności...' : 'Kup pakiet lekcji'}
                 </button>
-
-                <p className={styles.hint}>Rezerwacja terminów po zakupie pakietu</p>
             </div>
 
             <LoginModal
                 isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    checkAuthAndPurchase();
-                }}
+                onClose={() => setIsModalOpen(false)}
             />
         </aside>
     );

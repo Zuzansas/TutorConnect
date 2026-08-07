@@ -53,12 +53,15 @@ const ReservationsPage = () => {
     const fetchUserPackages = async () => {
         if (userRole === 'ADMIN') return;
         try {
-            const response = await fetch('http://localhost:8080/api/packages/my-active', {
+
+            const response = await fetch('http://localhost:8080/api/packages/my', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
                 const data = await response.json();
                 setPackages(data);
+            } else {
+                console.error("Błąd pobierania pakietów, status:", response.status);
             }
         } catch (error) {
             console.error("Błąd pobierania pakietów:", error);
@@ -299,15 +302,15 @@ const ReservationsPage = () => {
         }
     };
 
-    // LOGIKA PODZIAŁU I SORTOWANIA LEKCJI
+
     const now = new Date();
 
-    // Nadchodzące: Aktywne i zaplanowane po czasie 'now' (sortowanie od najbliższej do najdalszej)
+
     const upcomingReservations = reservations
         .filter(res => new Date(res.startTime) >= now && res.status !== 'CANCELLED')
         .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
-    // Odbyte / Anulowane: Wykonane, anulowane lub w przeszłości (sortowanie od najnowszych)
+
     const pastReservations = reservations
         .filter(res => new Date(res.startTime) < now || res.status === 'CANCELLED')
         .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
@@ -320,7 +323,7 @@ const ReservationsPage = () => {
         <div className={styles.container}>
             <ToastContainer />
 
-            {/* HERO SECTION */}
+
             <div className={styles.heroSection}>
                 <div className={styles.badge}>
                     {userRole === 'ADMIN' ? <FaUserShield /> : <FaGraduationCap />}

@@ -28,7 +28,7 @@ const BookingPage = () => {
 
     const fetchPackageDetails = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/api/packages/my-active`, {
+            const response = await fetch(`http://localhost:8080/api/packages/my`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 

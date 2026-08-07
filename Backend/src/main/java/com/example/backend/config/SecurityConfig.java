@@ -71,6 +71,7 @@ public class SecurityConfig {
                                                                 "/api/lesson-offers/{id}",
                                                                 "/api/reviews/**")
                                                 .permitAll()
+                                                .requestMatchers("/api/webhooks/**").permitAll()
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(
                                                 new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService,
