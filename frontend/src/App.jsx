@@ -15,6 +15,7 @@ import BookingPage from './pages/BookingPage/BookingPage';
 import ReservationsPage from './pages/ReservationsPage/ReservationsPage.jsx';
 import HowItWorksPage from './pages/HowItWorksPage/HowItWorksPage.jsx';
 import ContactPage from './pages/ContactPage/ContactPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage.jsx';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path='/admin-calendar' element={<ProtectedRoute><AdminCalendarPage /></ProtectedRoute>} />
           <Route path="/book/:packageId" element={<BookingPage />} />
           <Route path="/reservations" element={<ReservationsPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Routes>
         <Footer />
       </div>

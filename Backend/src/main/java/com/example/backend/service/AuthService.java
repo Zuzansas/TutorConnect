@@ -1,6 +1,6 @@
 package com.example.backend.service;
 
-import lombok.RequiredArgsConstructor;
+import com.example.backend.model.entity.PasswordResetToken;
 import com.example.backend.model.entity.RefreshToken;
 import com.example.backend.model.entity.User;
 import com.example.backend.model.exception.AuthException;
@@ -8,21 +8,32 @@ import com.example.backend.model.request.LoginRequest;
 import com.example.backend.model.request.RegisterRequest;
 import com.example.backend.model.response.LoginResponse;
 import com.example.backend.model.response.RegisterResponse;
+import com.example.backend.repository.PasswordResetTokenRepository;
 import com.example.backend.security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final CloudinaryService cloudinaryService;
+
+    // ⬇️ DODANE BRAKUJĄCE POLA (Lombok @RequiredArgsConstructor wygeneruje dla nich
+    // konstruktor)
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
     public RegisterResponse register(RegisterRequest request, MultipartFile avatar) {
         if (userService.existsByEmail(request.email())) {
@@ -46,7 +57,8 @@ public class AuthService {
                 .city(request.city())
                 .bio(request.bio())
                 .avatarURL(avatarUrl)
-                .createdAt(Instant.now()).build();
+                .createdAt(Instant.now())
+                .build();
 
         userService.saveUser(user);
 
@@ -55,7 +67,42 @@ public class AuthService {
 
         return RegisterResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken()).build();
+                .refreshToken(refreshToken.getToken())
+                .build();
+    }
+
+    @Transactional
+    public void processForgotPassword(String email) {
+        User user = userService.findUserByEmail(email);
+
+        // 1. Wygeneruj token
+        String resetToken = UUID.randomUUID().toString();
+
+        // 2. Zapisz token w bazie (usuwając ewentualne stare tokeny tego użytkownika)
+        passwordResetTokenRepository.deleteByUserId(user.getId());
+        passwordResetTokenRepository
+                .save(new PasswordResetToken(resetToken, user, Instant.now().plus(30, ChronoUnit.MINUTES)));
+
+        // 3. Wyślij e-mail
+        emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new AuthException("Nieprawidłowy lub wygasły token"));
+
+        if (resetToken.getExpiryDate().isBefore(Instant.now())) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new AuthException("Token wygasł");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userService.saveUser(user);
+
+        // Usunięcie tokena po zużyciu
+        passwordResetTokenRepository.delete(resetToken);
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -67,10 +114,12 @@ public class AuthService {
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String accessToken = tokenProvider.generateToken(user);
-        String role = user.getAdmin() ? "ADMIN" : "USER";
+        String role = Boolean.TRUE.equals(user.getAdmin()) ? "ADMIN" : "USER";
+
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
-                .role(role).build();
+                .role(role)
+                .build();
     }
 }
