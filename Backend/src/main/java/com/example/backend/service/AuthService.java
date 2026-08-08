@@ -30,8 +30,6 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final CloudinaryService cloudinaryService;
 
-    // ⬇️ DODANE BRAKUJĄCE POLA (Lombok @RequiredArgsConstructor wygeneruje dla nich
-    // konstruktor)
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
 
@@ -75,15 +73,11 @@ public class AuthService {
     public void processForgotPassword(String email) {
         User user = userService.findUserByEmail(email);
 
-        // 1. Wygeneruj token
         String resetToken = UUID.randomUUID().toString();
 
-        // 2. Zapisz token w bazie (usuwając ewentualne stare tokeny tego użytkownika)
         passwordResetTokenRepository.deleteByUserId(user.getId());
         passwordResetTokenRepository
                 .save(new PasswordResetToken(resetToken, user, Instant.now().plus(30, ChronoUnit.MINUTES)));
-
-        // 3. Wyślij e-mail
         emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
     }
 
@@ -101,7 +95,6 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userService.saveUser(user);
 
-        // Usunięcie tokena po zużyciu
         passwordResetTokenRepository.delete(resetToken);
     }
 
