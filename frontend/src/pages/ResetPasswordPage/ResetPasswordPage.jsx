@@ -67,7 +67,7 @@ const ResetPasswordPage = () => {
     return (
         <div className={styles.container}>
             <div className={styles.card}>
-                <h2>Ustaw nowe hasło</h2>
+                <h2>Nowe hasło</h2>
 
                 {error && <p className={styles.errorMsg}>{error}</p>}
 
