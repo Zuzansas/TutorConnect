@@ -275,18 +275,7 @@
 }
 
 
-.resCard::before {
-    content: '';
-    position: absolute;
-    left: -38px;
-    top: 25px;
-    width: 14px;
-    height: 14px;
-    background: #d28b5b;
-    border-radius: 50%;
-    border: 3px solid white;
-    box-shadow: 0 0 0 3px #e6f4ff;
-}
+
 
 .resCard.past {
     opacity: 0.7;

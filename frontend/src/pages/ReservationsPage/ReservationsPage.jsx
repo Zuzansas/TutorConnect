@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './ReservationsPage.module.css';
 import {
-    FaCalendarCheck,
     FaRegClock,
     FaTrashAlt,
     FaFolderOpen,
@@ -17,7 +16,8 @@ import {
     FaGraduationCap,
     FaUserShield,
     FaCalendarAlt,
-    FaHistory
+    FaHistory,
+    FaEnvelope
 } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { toast, ToastContainer } from 'react-toastify';
@@ -53,7 +53,6 @@ const ReservationsPage = () => {
     const fetchUserPackages = async () => {
         if (userRole === 'ADMIN') return;
         try {
-
             const response = await fetch('http://localhost:8080/api/packages/my', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -66,6 +65,12 @@ const ReservationsPage = () => {
         } catch (error) {
             console.error("Błąd pobierania pakietów:", error);
         }
+    };
+
+    const isGroupType = (type) => {
+        if (!type) return false;
+        const norm = type.toString().trim().toLowerCase();
+        return norm.includes('group') || norm.includes('grup');
     };
 
     const fetchReservations = async () => {
@@ -256,7 +261,6 @@ const ReservationsPage = () => {
         const diffInHours = (startTime - now) / (1000 * 60 * 60);
         const isLate = diffInHours < 12;
 
-
         const modalTitle = isAdmin
             ? 'Czy na pewno chcesz odwołać lekcję?'
             : 'Czy na pewno chcesz odwołać lekcję?';
@@ -275,7 +279,6 @@ const ReservationsPage = () => {
                 ? '<b style="color: #e74c3c;">Uwaga! Do zajęć zostało mniej niż 12h.</b><br/>Lekcja zostanie odwołana, ale <b style="color: #e74c3c;">NIE otrzymają Państwo zwrotu</b> lekcji do pakietu.'
                 : 'Do zajęć zostało więcej niż 12h. Po odwołaniu <b>1 lekcja zostanie zwrócona</b> do Twojego pakietu.';
         }
-
 
         const result = await Swal.fire({
             title: modalTitle,
@@ -304,7 +307,6 @@ const ReservationsPage = () => {
                     let successMessage = isAdmin
                         ? "Zajęcia zostały odwołane. Uczeń otrzymał zwrot lekcji i powiadomienie e-mail."
                         : "Anulowano rezerwację.";
-
 
                     const contentType = response.headers.get("content-type");
                     if (contentType && contentType.includes("application/json")) {
@@ -335,6 +337,7 @@ const ReservationsPage = () => {
             }
         }
     };
+
     const toggleExpand = (id) => {
         if (expandedRes === id) setExpandedRes(null);
         else {
@@ -343,30 +346,25 @@ const ReservationsPage = () => {
         }
     };
 
-
-
-
-    // 1. Pomocnicza funkcja grupująca rezerwacje dla Admina po slotId / terminie
     const getGroupedReservations = (rawReservations) => {
         if (userRole !== 'ADMIN') return rawReservations;
 
         const groupedMap = new Map();
 
         rawReservations.forEach(res => {
-            // Tworzymy unikalny klucz dla slotu (lub godziny rozpoczęcia)
             const groupKey = res.slotId || `${res.startTime}_${res.lessonTitle}`;
 
             if (!groupedMap.has(groupKey)) {
                 groupedMap.set(groupKey, {
                     ...res,
-                    studentsList: [res.studentName], // Tworzymy listę uczniów
+                    studentsList: [res.studentName],
                     bookingCount: 1
                 });
             } else {
                 const existingGroup = groupedMap.get(groupKey);
                 existingGroup.studentsList.push(res.studentName);
                 existingGroup.bookingCount += 1;
-                // Jeśli chociaż jedna rezerwacja z grupy ma status CONFIRMED, to cała lekcja jest aktywna
+
                 if (res.status === 'CONFIRMED') existingGroup.status = 'CONFIRMED';
             }
         });
@@ -389,12 +387,20 @@ const ReservationsPage = () => {
 
     const displayedReservations = activeTab === 'upcoming' ? upcomingReservations : pastReservations;
 
+    const handleSendEmailClient = (studentEmail, lessonTitle) => {
+        if (!studentEmail) {
+            toast.error("Brak adresu e-mail ucznia.");
+            return;
+        }
+        const subject = encodeURIComponent(`Wiadomość dotycząca zajęć: ${lessonTitle}`);
+        window.location.href = `mailto:${studentEmail}?subject=${subject}`;
+    };
+
     if (loading) return <div className={styles.loader}>Pobieranie Twoich zajęć...</div>;
 
     return (
         <div className={styles.container}>
             <ToastContainer />
-
 
             <div className={styles.heroSection}>
                 <div className={styles.badge}>
@@ -418,7 +424,7 @@ const ReservationsPage = () => {
                 </p>
             </div>
 
-            {/* SEKCJA PAKIETÓW DLA UCZNIA */}
+
             {userRole !== 'ADMIN' && (
                 <div style={{ marginBottom: '40px' }}>
                     <h2 style={{ fontSize: '1.3rem', color: '#d28b5b', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -427,75 +433,79 @@ const ReservationsPage = () => {
 
                     {packages.length > 0 ? (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-                            {packages.map(pkg => (
-                                <div key={pkg.id} style={{
-                                    background: '#ffffff',
-                                    padding: '20px',
-                                    borderRadius: '15px',
-                                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                                    border: '1px solid #f1ece8',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'space-between',
-                                    gap: '12px'
-                                }}>
-                                    <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{
-                                                fontSize: '0.75rem',
-                                                fontWeight: 'bold',
-                                                padding: '4px 10px',
-                                                borderRadius: '20px',
-                                                background: pkg.lessonOffer.lessonType === 'GROUP' ? '#e6f4ff' : '#fff0f6',
-                                                color: pkg.lessonOffer.lessonType === 'GROUP' ? '#0070f3' : '#c01e5a',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '5px'
-                                            }}>
-                                                {pkg.lessonOffer.lessonType === 'GROUP' ? <FaUsers /> : <FaUser />}
-                                                {pkg.lessonOffer.lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'}
-                                            </span>
-                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>
-                                                Poziom: <b>{pkg.lessonOffer.level}</b>
-                                            </span>
+                            {packages.map(pkg => {
+                                const isGroup = isGroupType(pkg.lessonOffer?.lessonType);
+
+                                return (
+                                    <div key={pkg.id} style={{
+                                        background: '#ffffff',
+                                        padding: '20px',
+                                        borderRadius: '15px',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                                        border: '1px solid #f1ece8',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        gap: '12px'
+                                    }}>
+                                        <div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 'bold',
+                                                    padding: '4px 10px',
+                                                    borderRadius: '20px',
+                                                    background: isGroup ? '#e6f4ff' : '#fff0f6',
+                                                    color: isGroup ? '#0070f3' : '#c01e5a',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '5px'
+                                                }}>
+                                                    {isGroup ? <FaUsers /> : <FaUser />}
+                                                    {isGroup ? 'Grupowe' : 'Indywidualne'}
+                                                </span>
+                                                <span style={{ fontSize: '0.8rem', color: '#888' }}>
+                                                    Poziom: <b>{pkg.lessonOffer?.level}</b>
+                                                </span>
+                                            </div>
+
+                                            <h3 style={{ margin: '10px 0 5px 0', fontSize: '1.1rem', color: '#2c3e50' }}>
+                                                {pkg.lessonOffer?.title}
+                                            </h3>
+
+                                            <p style={{ margin: 0, fontSize: '0.9rem', color: '#555' }}>
+                                                Pozostało do wykorzystania: <b style={{ color: '#2ecc71', fontSize: '1.1rem' }}>{pkg.remainingLessons}</b> lekcji
+                                            </p>
+
+                                            {pkg.expiresAt && (
+                                                <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: '#95a5a6' }}>
+                                                    Ważny do: {new Date(pkg.expiresAt).toLocaleDateString()}
+                                                </p>
+                                            )}
                                         </div>
 
-                                        <h3 style={{ margin: '10px 0 5px 0', fontSize: '1.1rem', color: '#2c3e50' }}>
-                                            {pkg.lessonOffer.title}
-                                        </h3>
-
-                                        <p style={{ margin: 0, fontSize: '0.9rem', color: '#555' }}>
-                                            Pozostało do wykorzystania: <b style={{ color: '#2ecc71', fontSize: '1.1rem' }}>{pkg.remainingLessons}</b> lekcji
-                                        </p>
-
-                                        {pkg.expiresAt && (
-                                            <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: '#95a5a6' }}>
-                                                Ważny do: {new Date(pkg.expiresAt).toLocaleDateString()}
-                                            </p>
-                                        )}
+                                        <button
+                                            onClick={() => navigate(`/book/${pkg.id}`)}
+                                            style={{
+                                                background: '#d28b5b',
+                                                color: '#fff',
+                                                border: 'none',
+                                                padding: '10px 15px',
+                                                borderRadius: '10px',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px',
+                                                transition: '0.3s'
+                                            }}
+                                        >
+                                            <FaCalendarPlus /> Zarezerwuj lekcję w kalendarzu
+                                        </button>
                                     </div>
-
-                                    <button
-                                        onClick={() => navigate(`/book/${pkg.id}`)}
-                                        style={{
-                                            background: '#d28b5b',
-                                            color: '#fff',
-                                            border: 'none',
-                                            padding: '10px 15px',
-                                            borderRadius: '10px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px',
-                                            transition: '0.3s'
-                                        }}
-                                    >
-                                        <FaCalendarPlus /> Zarezerwuj lekcję w kalendarzu
-                                    </button>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <div className={styles.emptyState}>
@@ -505,7 +515,6 @@ const ReservationsPage = () => {
                 </div>
             )}
 
-            {/* SEKCJA SELEKCJI ZAKŁADEK (TABS) */}
             <div className={styles.tabsHeader}>
                 <div className={styles.tabsContainer}>
                     <button
@@ -523,7 +532,6 @@ const ReservationsPage = () => {
                 </div>
             </div>
 
-            {/* SIATKA KART ZAMIAST POJEDYNCZEJ KOLUMNY */}
             <div className={styles.cardsGrid}>
                 {displayedReservations.length > 0 ? (
                     displayedReservations.map((res) => {
@@ -550,7 +558,6 @@ const ReservationsPage = () => {
                                         <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
 
-
                                     {userRole === 'ADMIN' ? (
                                         <div style={{ marginTop: '8px', fontSize: '0.88rem', color: '#444' }}>
                                             <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#d28b5b' }}>
@@ -563,7 +570,6 @@ const ReservationsPage = () => {
                                             </ul>
                                         </div>
                                     ) : (
-
                                         <p className={styles.studentInfo}>Uczeń: <strong>{res.studentName}</strong></p>
                                     )}
                                 </div>
@@ -572,6 +578,7 @@ const ReservationsPage = () => {
                                     <button onClick={() => toggleExpand(res.id)} className={styles.materialsBtn}>
                                         {expandedRes === res.id ? <FaChevronUp /> : <FaFolderOpen />} Materiały
                                     </button>
+
 
                                     {isPast && res.status === 'COMPLETED' && userRole !== 'ADMIN' && (
                                         existingReview ? (
@@ -586,9 +593,19 @@ const ReservationsPage = () => {
                                     )}
 
                                     {userRole === 'ADMIN' && (
-                                        <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn} title="Dodaj materiały">
+                                        <> <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn} title="Dodaj materiały">
                                             <FaPlus />
                                         </button>
+                                            <button
+                                                onClick={() => handleSendEmailClient(res.studentEmail, res.lessonTitle)}
+                                                className={styles.addBtn}
+                                                title="Wyślij e-mail do ucznia"
+                                                style={{ color: '#d28b5b', borderColor: '#fdf2eb', background: '#fdf2eb' }}
+                                            >
+                                                <FaEnvelope />
+                                            </button>
+                                        </>
+
                                     )}
 
                                     {res.status !== 'CANCELLED' && (userRole === 'ADMIN' || !isPast) && (
