@@ -136,12 +136,31 @@ public class ReservationService {
 
         reservationRepository.save(reservation);
 
-        if (!isLateCancellation) {
+        boolean isRefunded = !isLateCancellation;
+
+        if (isRefunded) {
             UserPackage userPackage = reservation.getUserPackage();
             if (userPackage != null) {
                 userPackage.setRemainingLessons(userPackage.getRemainingLessons() + 1);
                 packageRepository.save(userPackage);
             }
+        }
+
+        // ⬇️ WYSYŁANIE MAILA DO UCZNIA
+        try {
+            emailService.sendReservationCancellationEmail(
+                    student.getEmail(),
+                    student.getFullName(),
+                    reservation.getUserPackage() != null ? reservation.getUserPackage().getLessonOffer().getTitle()
+                            : "Lekcja",
+                    reservation.getStartTime(),
+                    isRefunded,
+                    false);
+        } catch (Exception e) {
+            System.err.println("Nie udało się wysłać maila o anulowaniu: " + e.getMessage());
+        }
+
+        if (isRefunded) {
             return "Lekcja została odwołana z odpowiednim wyprzedzeniem. Zwrócono 1 lekcję do Twojego pakietu.";
         } else {
             return "Lekcja została odwołana na mniej niż 12h przed zajęciami. Lekcja NIE została zwrócona do pakietu.";

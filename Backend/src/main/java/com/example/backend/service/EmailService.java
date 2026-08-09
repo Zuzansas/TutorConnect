@@ -250,4 +250,92 @@ public class EmailService {
             log.error("❌ Błąd podczas wysyłania e-maila o rezerwacji do {}: {}", toEmail, e.getMessage());
         }
     }
+
+    @Async
+    public void sendReservationCancellationEmail(
+            String toEmail,
+            String studentName,
+            String lessonTitle,
+            java.time.Instant startTime,
+            boolean isRefunded,
+            boolean cancelledByAdmin) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+
+            String subject = cancelledByAdmin
+                    ? "Odwołanie zajęć przez edukatora - TutorConnect"
+                    : "Potwierdzenie odwołania rezerwacji - TutorConnect";
+            helper.setSubject(subject);
+
+            String displayName = (studentName != null && !studentName.isBlank()) ? studentName : "Uczniu";
+
+            // Formatowanie daty i godziny
+            java.time.ZoneId zoneId = java.time.ZoneId.of("Europe/Warsaw");
+            java.time.ZonedDateTime startZdt = startTime.atZone(zoneId);
+
+            java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter
+                    .ofPattern("dd MMMM yyyy", new java.util.Locale("pl"));
+            java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+
+            String dateStr = startZdt.format(dateFormatter);
+            String startStr = startZdt.format(timeFormatter);
+
+            String refundInfoText = isRefunded
+                    ? "<b>1 lekcja została zwrócona</b> do Twojego pakietu."
+                    : "<b style='color: #e74c3c;'>Lekcja NIE została zwrócona</b> do pakietu (odwołanie nastąpiło na mniej niż 12h przed zajęciami).";
+
+            String reasonText = cancelledByAdmin
+                    ? "Zajęcia zostały odwołane przez edukatora. " + refundInfoText
+                    : "Twoje odwołanie lekcji zostało zarejestrowane. " + refundInfoText;
+
+            String htmlContent = """
+                        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f1ece8; border-radius: 12px; background-color: #ffffff;">
+                            <h2 style="color: #e74c3c; text-align: center;">Lekcja została odwołana ❌</h2>
+                            <p style="font-size: 1rem; color: #333333;">Cześć <b>%s</b>,</p>
+                            <p style="font-size: 0.95rem; color: #555555; line-height: 1.5;">
+                                Informujemy, że poniższy termin lekcji został anulowany w systemie TutorConnect:
+                            </p>
+
+                            <div style="background-color: #faf8f5; border: 1px solid #f1ece8; border-radius: 10px; padding: 15px; margin: 20px 0;">
+                                <h3 style="color: #2c3e50; margin-top: 0; font-size: 1.1rem;">Odwołane zajęcia:</h3>
+                                <ul style="color: #555555; line-height: 1.8; padding-left: 20px; margin: 0;">
+                                    <li><b>Lekcja:</b> %s</li>
+                                    <li><b>Data:</b> %s</li>
+                                    <li><b>Godzina:</b> %s</li>
+                                </ul>
+                            </div>
+
+                            <div style="background-color: #fdf2f2; border-left: 4px solid #e74c3c; padding: 12px 15px; margin-bottom: 20px; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 0.9rem; color: #c0392b; line-height: 1.4;">
+                                    %s
+                                </p>
+                            </div>
+
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="%s/reservations" style="background-color: #d28b5b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                    Przejdź do moich rezerwacji
+                                </a>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid #eeeeee; margin: 20px 0;" />
+                            <p style="font-size: 0.8rem; color: #aaaaaa; text-align: center;">
+                                Pozdrawiamy,<br/>Zespół TutorConnect
+                            </p>
+                        </div>
+                    """
+                    .formatted(displayName, lessonTitle, dateStr, startStr, reasonText, frontendUrl);
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("📧 Pomyślnie wysłano e-mail o anulowaniu rezerwacji do: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("❌ Błąd podczas wysyłania e-maila o anulowaniu rezerwacji do {}: {}", toEmail, e.getMessage());
+        }
+    }
 }
