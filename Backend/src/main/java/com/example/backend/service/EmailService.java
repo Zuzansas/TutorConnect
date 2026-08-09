@@ -120,4 +120,58 @@ public class EmailService {
             log.error("❌ Błąd podczas wysyłania e-maila aktywacyjnego do {}: {}", toEmail, e.getMessage());
         }
     }
+
+    @Async
+    public void sendPackagePurchaseConfirmationEmail(String toEmail, String userName, String packageTitle,
+            int totalLessons, java.math.BigDecimal price) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Potwierdzenie zakupu pakietu lekcji - TutorConnect");
+
+            String displayName = (userName != null && !userName.isBlank()) ? userName : "Klincie";
+
+            String htmlContent = """
+                        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f1ece8; border-radius: 12px; background-color: #ffffff;">
+                            <h2 style="color: #d28b5b; text-align: center;">Dziękujemy za zakup! 💳</h2>
+                            <p style="font-size: 1rem; color: #333333;">Cześć <b>%s</b>,</p>
+                            <p style="font-size: 0.95rem; color: #555555; line-height: 1.5;">
+                                Płatność przebiegła pomyślnie. Twój nowy pakiet lekcji został aktywowany i jest gotowy do wykorzystania!
+                            </p>
+
+                            <div style="background-color: #faf8f5; border: 1px solid #f1ece8; border-radius: 10px; padding: 15px; margin: 20px 0;">
+                                <h3 style="color: #2c3e50; margin-top: 0; font-size: 1.1rem;">Szczegóły zamówienia:</h3>
+                                <ul style="color: #555555; line-height: 1.6; padding-left: 20px; margin: 0;">
+                                    <li><b>Pakiet:</b> %s</li>
+                                    <li><b>Liczba lekcji w pakiecie:</b> %d</li>
+                                    <li><b>Zapłacono:</b> %s PLN</li>
+                                </ul>
+                            </div>
+
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="%s/reservations" style="background-color: #d28b5b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                    Zarezerwuj pierwszą lekcję
+                                </a>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid #eeeeee; margin: 20px 0;" />
+                            <p style="font-size: 0.8rem; color: #aaaaaa; text-align: center;">
+                                Pozdrawiamy,<br/>Zespół TutorConnect
+                            </p>
+                        </div>
+                    """
+                    .formatted(displayName, packageTitle, totalLessons, price, frontendUrl);
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("📧 Pomyślnie wysłano e-mail z potwierdzeniem zakupu do: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("❌ Błąd podczas wysyłania e-maila o zakupie pakietu do {}: {}", toEmail, e.getMessage());
+        }
+    }
 }

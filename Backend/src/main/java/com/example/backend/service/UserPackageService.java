@@ -32,6 +32,7 @@ public class UserPackageService {
         private final UserPackageRepository packageRepository;
         private final LessonOfferRepository offerRepository;
         private final UserService userService;
+        private final EmailService emailService;
 
         @Value("${stripe.api.key:}")
         private String stripeApiKey;
@@ -89,20 +90,14 @@ public class UserPackageService {
                 try {
                         System.out.println("--------------------------------------------------");
                         System.out.println("🚀 [WEBHOOK] Rozpoczynam zapisywanie pakietu...");
-                        System.out.println("👉 Otrzymane userId: " + userIdStr);
-                        System.out.println("👉 Otrzymane offerId: " + offerIdStr);
 
                         UUID userId = UUID.fromString(userIdStr);
                         UUID offerId = UUID.fromString(offerIdStr);
 
                         User user = userService.findUserById(userId);
-                        System.out.println("✅ Znaleziono użytkownika w bazie: " + user.getEmail() + " (ID: "
-                                        + user.getId() + ")");
-
                         LessonOffer offer = offerRepository.findById(offerId)
                                         .orElseThrow(() -> new NotFoundException(
                                                         "Oferta nie istnieje o ID: " + offerId));
-                        System.out.println("✅ Znaleziono ofertę: " + offer.getTitle());
 
                         UserPackage userPackage = UserPackage.builder()
                                         .user(user)
@@ -114,6 +109,14 @@ public class UserPackageService {
 
                         UserPackage savedPackage = packageRepository.save(userPackage);
                         System.out.println("🎉 [SUCCESS] Zapisano pakiet o ID: " + savedPackage.getId());
+
+                        emailService.sendPackagePurchaseConfirmationEmail(
+                                        user.getEmail(),
+                                        user.getFullName(),
+                                        offer.getTitle(),
+                                        savedPackage.getRemainingLessons(),
+                                        offer.getPrice());
+
                         System.out.println("--------------------------------------------------");
 
                 } catch (Exception e) {

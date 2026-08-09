@@ -93,7 +93,6 @@ const BookingPage = () => {
         }
     };
 
-    // Pomocnicza funkcja sprawdzająca, czy slot rozpoczyna się za mniej niż 24h
     const isTooLateToBook = (startTime) => {
         const now = new Date();
         const slotTime = new Date(startTime);

@@ -44,14 +44,14 @@ const PriceInfo = ({ pricePerHour, duration, totalLessons, offerId, lessonType }
                     const data = await response.json();
                     window.location.href = data.checkoutUrl;
                 } else if (response.status === 401) {
-                    // ⬇️ Token wygasł lub jest niepoprawny
-                    localStorage.removeItem('accessToken'); // Czyścimy stary token
+
+                    localStorage.removeItem('accessToken');
                     Swal.fire({
                         title: 'Sesja wygasła',
                         text: 'Zaloguj się ponownie, aby dokończyć zakup.',
                         icon: 'warning'
                     }).then(() => {
-                        setIsModalOpen(true); // Otwiera modal logowania
+                        setIsModalOpen(true);
                     });
                 } else {
                     const err = await response.json();
