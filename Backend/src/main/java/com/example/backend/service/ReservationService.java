@@ -22,6 +22,7 @@ public class ReservationService {
     private final AvailabilitySlotRepository slotRepository;
     private final UserPackageRepository packageRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     private static final long CANCELLATION_DEADLINE_HOURS = 12;
 
@@ -85,7 +86,22 @@ public class ReservationService {
                 .status(ReservationStatus.CONFIRMED)
                 .build();
 
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        try {
+            emailService.sendReservationConfirmationEmail(
+                    student.getEmail(),
+                    student.getFullName(),
+                    userPackage.getLessonOffer().getTitle(),
+                    savedReservation.getStartTime(),
+                    savedReservation.getEndTime(),
+                    userPackage.getRemainingLessons());
+        } catch (Exception e) {
+            System.err
+                    .println("Nie udało się wysłać maila, ale rezerwacja została utworzona w bazie: " + e.getMessage());
+        }
+
+        return savedReservation;
     }
 
     @Transactional
