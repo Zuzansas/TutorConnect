@@ -159,7 +159,7 @@ const SignupPage = () => {
                 setStep(3);
                 setTimeout(() => {
                     navigate('/');
-                }, 2500);
+                }, 5000);
             }
         } catch (error) {
             setErrorMessage('Błąd połączenia z serwerem. Upewnij się, że Backend działa.');

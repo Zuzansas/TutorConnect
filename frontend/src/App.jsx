@@ -16,6 +16,7 @@ import ReservationsPage from './pages/ReservationsPage/ReservationsPage.jsx';
 import HowItWorksPage from './pages/HowItWorksPage/HowItWorksPage.jsx';
 import ContactPage from './pages/ContactPage/ContactPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage.jsx';
+import ActivateAccountPage from './components/ActivateAccountPage/ActivateAccountPage.jsx';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           <Route path="/book/:packageId" element={<BookingPage />} />
           <Route path="/reservations" element={<ReservationsPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/activate" element={<ActivateAccountPage />} />
         </Routes>
         <Footer />
       </div>

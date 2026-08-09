@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.model.entity.EmailVerificationToken;
 import com.example.backend.model.entity.PasswordResetToken;
 import com.example.backend.model.entity.RefreshToken;
 import com.example.backend.model.entity.User;
@@ -8,6 +9,7 @@ import com.example.backend.model.request.LoginRequest;
 import com.example.backend.model.request.RegisterRequest;
 import com.example.backend.model.response.LoginResponse;
 import com.example.backend.model.response.RegisterResponse;
+import com.example.backend.repository.EmailVerificationTokenRepository;
 import com.example.backend.repository.PasswordResetTokenRepository;
 import com.example.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,10 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
 
-    public RegisterResponse register(RegisterRequest request, MultipartFile avatar) {
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @Transactional
+    public void register(RegisterRequest request, MultipartFile avatar) {
         if (userService.existsByEmail(request.email())) {
             throw new AuthException("Adres e-mail jest już używany");
         }
@@ -56,16 +61,61 @@ public class AuthService {
                 .bio(request.bio())
                 .avatarURL(avatarUrl)
                 .createdAt(Instant.now())
+                .active(false) // 👈 Domyślnie NIEAKTYWNY
+                .validatedEmail(false) // 👈 E-mail niepotwierdzony
                 .build();
 
         userService.saveUser(user);
 
+        // Wygeneruj token aktywacyjny (ważny 24 godziny)
+        String activationToken = UUID.randomUUID().toString();
+        emailVerificationTokenRepository.save(new EmailVerificationToken(
+                activationToken, user, Instant.now().plus(24, ChronoUnit.HOURS)));
+
+        // Wyślij e-mail z linkiem aktywacyjnym
+        emailService.sendActivationEmail(user.getEmail(), user.getFullName(), activationToken);
+    }
+
+    @Transactional
+    public void activateAccount(String token) {
+        EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new AuthException("Nieprawidłowy lub nieistniejący token aktywacyjny"));
+
+        if (verificationToken.getExpiryDate().isBefore(Instant.now())) {
+            emailVerificationTokenRepository.delete(verificationToken);
+            throw new AuthException("Token aktywacyjny wygasł. Zarejestruj się ponownie lub poproś o nowy link.");
+        }
+
+        User user = verificationToken.getUser();
+        user.setActive(true);
+        user.setValidatedEmail(true);
+        userService.saveUser(user);
+
+        // Usuwamy zużyty token
+        emailVerificationTokenRepository.delete(verificationToken);
+    }
+
+    public LoginResponse login(LoginRequest request) {
+        User user = userService.findUserByEmail(request.email());
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new AuthException("Nieprawidłowe hasło");
+        }
+
+        // ⬇️ BLOKADA LOGOWANIA DLA NIEAKTYWNYCH KONT
+        if (Boolean.FALSE.equals(user.getValidatedEmail()) || Boolean.FALSE.equals(user.getActive())) {
+            throw new AuthException(
+                    "Konto nie zostało jeszcze aktywowane. Sprawdź swoją skrzynkę e-mail i kliknij link aktywacyjny.");
+        }
+
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String accessToken = tokenProvider.generateToken(user);
+        String role = Boolean.TRUE.equals(user.getAdmin()) ? "ADMIN" : "USER";
 
-        return RegisterResponse.builder()
+        return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
+                .role(role)
                 .build();
     }
 
@@ -98,21 +148,4 @@ public class AuthService {
         passwordResetTokenRepository.delete(resetToken);
     }
 
-    public LoginResponse login(LoginRequest request) {
-        User user = userService.findUserByEmail(request.email());
-
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new AuthException("Nieprawidłowe hasło");
-        }
-
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
-        String accessToken = tokenProvider.generateToken(user);
-        String role = Boolean.TRUE.equals(user.getAdmin()) ? "ADMIN" : "USER";
-
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .role(role)
-                .build();
-    }
 }

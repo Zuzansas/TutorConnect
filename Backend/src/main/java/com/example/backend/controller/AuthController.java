@@ -42,10 +42,19 @@ public class AuthController {
                         @ApiResponse(responseCode = "400", description = "Błąd walidacji lub email/username już istnieje", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
         })
         @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        public ResponseEntity<RegisterResponse> register(
+        public ResponseEntity<Map<String, String>> register(
                         @RequestPart("request") @Valid RegisterRequest request,
                         @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
-                return ResponseEntity.ok(authService.register(request, avatar));
+                authService.register(request, avatar);
+                return ResponseEntity.ok(Map.of("message", "Rejestracja udana. Sprawdź e-mail, aby aktywować konto."));
+        }
+
+        @Operation(summary = "Aktywacja konta", description = "Aktywuje konto użytkownika na podstawie tokena z wiadomości e-mail.")
+        @GetMapping("/activate-account")
+        public ResponseEntity<Map<String, String>> activateAccount(@RequestParam("token") String token) {
+                authService.activateAccount(token);
+                return ResponseEntity
+                                .ok(Map.of("message", "Konto zostało pomyślnie aktywowane. Możesz się zalogować."));
         }
 
         @Operation(summary = "Logowanie użytkownika", description = "Uwierzytelnia użytkownika i zwraca tokeny dostępu (access token i refresh token)")

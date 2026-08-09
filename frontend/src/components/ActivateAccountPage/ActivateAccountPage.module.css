@@ -1,0 +1,87 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+    background-color: #faf8f5;
+}
+
+.card {
+    background: #ffffff;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f1ece8;
+    max-width: 450px;
+    width: 100%;
+    text-align: center;
+}
+
+.card h2 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+
+.info {
+    font-size: 1rem;
+    color: #666666;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+
+.success {
+    font-size: 1.05rem;
+    color: #27ae60;
+    background-color: #e8f8f5;
+    border: 1px solid #a3e4d7;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* Stan błędu (error) */
+.error {
+    font-size: 0.95rem;
+    color: #c0392b;
+    background-color: #fadbd8;
+    border: 1px solid #f5b7b1;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* Przycisk akcji */
+.btn {
+    background-color: #d28b5b;
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+    background-color: #b87343;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
