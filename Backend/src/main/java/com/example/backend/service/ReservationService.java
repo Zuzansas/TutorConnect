@@ -146,7 +146,6 @@ public class ReservationService {
             }
         }
 
-        // ⬇️ WYSYŁANIE MAILA DO UCZNIA
         try {
             emailService.sendReservationCancellationEmail(
                     student.getEmail(),
@@ -172,10 +171,8 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new NotFoundException("Rezerwacja nie istnieje"));
 
-        // 1. Wykonanie odwołania i zwrot lekcji do pakietu
         cancelReservationAndRefund(reservation);
 
-        // 2. Wysyłanie wiadomości e-mail do ucznia
         try {
             User student = reservation.getStudent();
 
