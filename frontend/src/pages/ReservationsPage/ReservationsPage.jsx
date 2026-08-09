@@ -250,30 +250,50 @@ const ReservationsPage = () => {
     };
 
     const handleCancel = async (reservation) => {
+        const isAdmin = userRole === 'ADMIN';
         const now = new Date();
         const startTime = new Date(reservation.startTime);
         const diffInHours = (startTime - now) / (1000 * 60 * 60);
         const isLate = diffInHours < 12;
 
-        const result = await Swal.fire({
-            title: 'Czy na pewno chcesz odwołać lekcję?',
-            html: isLate
+
+        const modalTitle = isAdmin
+            ? 'Czy na pewno chcesz odwołać lekcję?'
+            : 'Czy na pewno chcesz odwołać lekcję?';
+
+        let modalHtml = '';
+        if (isAdmin) {
+            modalHtml = `
+            <div style="text-align: left; font-size: 0.95rem; line-height: 1.5; color: #444;">
+                <p>Odwołujesz zajęcia dla ucznia: <b>${reservation.studentName || 'Uczeń'}</b>.</p>
+                <p style="color: #27ae60;"><b>1 lekcja zostanie automatycznie zwrócona</b> do pakietu ucznia.</p>
+                <p style="font-size: 0.85rem; color: #777;">Uczeń otrzyma również powiadomienie e-mail o odwołaniu zajęć.</p>
+            </div>
+        `;
+        } else {
+            modalHtml = isLate
                 ? '<b style="color: #e74c3c;">Uwaga! Do zajęć zostało mniej niż 12h.</b><br/>Lekcja zostanie odwołana, ale <b style="color: #e74c3c;">NIE otrzymają Państwo zwrotu</b> lekcji do pakietu.'
-                : 'Do zajęć zostało więcej niż 12h. Po odwołaniu <b>1 lekcja zostanie zwrócona</b> do Twojego pakietu.',
-            icon: isLate ? 'warning' : 'question',
+                : 'Do zajęć zostało więcej niż 12h. Po odwołaniu <b>1 lekcja zostanie zwrócona</b> do Twojego pakietu.';
+        }
+
+
+        const result = await Swal.fire({
+            title: modalTitle,
+            html: modalHtml,
+            icon: isAdmin ? 'info' : (isLate ? 'warning' : 'question'),
             showCancelButton: true,
             confirmButtonColor: '#e74c3c',
             cancelButtonColor: '#95a5a6',
-            confirmButtonText: 'Tak, odwołaj',
+            confirmButtonText: isAdmin ? 'Tak, odwołaj zajęcia' : 'Tak, odwołaj',
             cancelButtonText: 'Wróć'
         });
 
         if (result.isConfirmed) {
             try {
-                let url = userRole === 'ADMIN'
+                let url = isAdmin
                     ? `http://localhost:8080/api/reservations/${reservation.id}`
                     : `http://localhost:8080/api/reservations/${reservation.id}/cancel`;
-                let method = userRole === 'ADMIN' ? 'DELETE' : 'POST';
+                let method = isAdmin ? 'DELETE' : 'POST';
 
                 const response = await fetch(url, {
                     method: method,
@@ -281,19 +301,40 @@ const ReservationsPage = () => {
                 });
 
                 if (response.ok) {
-                    const resData = await response.json();
-                    toast.success(resData.message || "Anulowano rezerwację.");
+                    let successMessage = isAdmin
+                        ? "Zajęcia zostały odwołane. Uczeń otrzymał zwrot lekcji i powiadomienie e-mail."
+                        : "Anulowano rezerwację.";
+
+
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
+                        const resData = await response.json();
+                        if (resData && resData.message) {
+                            successMessage = resData.message;
+                        }
+                    } else {
+                        const textData = await response.text();
+                        if (textData) successMessage = textData;
+                    }
+
+                    toast.success(successMessage);
                     fetchInitialData();
                 } else {
-                    const err = await response.json();
-                    toast.error(err.message || "Błąd podczas odwoływania.");
+                    let errorMessage = "Błąd podczas odwoływania.";
+                    try {
+                        const err = await response.json();
+                        errorMessage = err.message || errorMessage;
+                    } catch (e) {
+
+                    }
+                    toast.error(errorMessage);
                 }
             } catch (error) {
-                toast.error("Błąd połączenia.");
+                console.error("Błąd podczas odwoływania rezerwacji:", error);
+                toast.error("Błąd połączenia z serwerem.");
             }
         }
     };
-
     const toggleExpand = (id) => {
         if (expandedRes === id) setExpandedRes(null);
         else {

@@ -172,7 +172,25 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new NotFoundException("Rezerwacja nie istnieje"));
 
+        // 1. Wykonanie odwołania i zwrot lekcji do pakietu
         cancelReservationAndRefund(reservation);
+
+        // 2. Wysyłanie wiadomości e-mail do ucznia
+        try {
+            User student = reservation.getStudent();
+
+            emailService.sendReservationCancellationEmail(
+                    student.getEmail(),
+                    student.getFullName(),
+                    reservation.getUserPackage() != null && reservation.getUserPackage().getLessonOffer() != null
+                            ? reservation.getUserPackage().getLessonOffer().getTitle()
+                            : "Lekcja",
+                    reservation.getStartTime(),
+                    true,
+                    true);
+        } catch (Exception e) {
+            System.err.println("Nie udało się wysłać e-maila o anulowaniu przez Korepetytora: " + e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)
