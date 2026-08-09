@@ -190,6 +190,14 @@ const BookingPage = () => {
                             const disabled = isTooLateToBook(slot.startTime);
                             const isSelected = selectedSlot?.id === slot.id;
 
+
+                            const isGroup = slot.lessonType && slot.lessonType.toString().toLowerCase().includes('grup');
+
+
+                            const maxCapacity = slot.capacity || (isGroup ? 5 : 1);
+                            const currentBookings = slot.currentBookingsCount || 0;
+                            const availablePlaces = slot.availablePlaces ?? (maxCapacity - currentBookings);
+
                             return (
                                 <button
                                     key={slot.id}
@@ -206,7 +214,25 @@ const BookingPage = () => {
                                         textDecoration: 'line-through'
                                     } : {}}
                                 >
-                                    {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+
+                                    <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+                                        {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+
+
+                                    {isGroup && !disabled && (
+                                        <span style={{
+                                            display: 'block',
+                                            fontSize: '0.7rem',
+                                            marginTop: '4px',
+                                            color: isSelected ? '#ffffff' : '#27ae60',
+                                            fontWeight: '600'
+                                        }}>
+                                            {availablePlaces > 0 ? `Wolne miejsca: ${availablePlaces}/${maxCapacity}` : 'Brak miejsc'}
+                                        </span>
+                                    )}
+
+
                                     {disabled && (
                                         <span style={{ display: 'block', fontSize: '0.65rem', textDecoration: 'none', color: '#d9534f' }}>
                                             &lt; 24h

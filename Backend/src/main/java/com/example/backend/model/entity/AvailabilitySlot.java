@@ -31,4 +31,13 @@ public class AvailabilitySlot {
 
     @Builder.Default
     private boolean isReserved = false;
+
+    @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("1")
+    @Builder.Default
+    private Integer capacity = 1;
+
+    public Integer getCapacity() {
+        return capacity != null ? capacity : 1;
+    }
 }

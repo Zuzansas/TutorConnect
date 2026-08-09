@@ -344,17 +344,48 @@ const ReservationsPage = () => {
     };
 
 
+
+
+    // 1. Pomocnicza funkcja grupująca rezerwacje dla Admina po slotId / terminie
+    const getGroupedReservations = (rawReservations) => {
+        if (userRole !== 'ADMIN') return rawReservations;
+
+        const groupedMap = new Map();
+
+        rawReservations.forEach(res => {
+            // Tworzymy unikalny klucz dla slotu (lub godziny rozpoczęcia)
+            const groupKey = res.slotId || `${res.startTime}_${res.lessonTitle}`;
+
+            if (!groupedMap.has(groupKey)) {
+                groupedMap.set(groupKey, {
+                    ...res,
+                    studentsList: [res.studentName], // Tworzymy listę uczniów
+                    bookingCount: 1
+                });
+            } else {
+                const existingGroup = groupedMap.get(groupKey);
+                existingGroup.studentsList.push(res.studentName);
+                existingGroup.bookingCount += 1;
+                // Jeśli chociaż jedna rezerwacja z grupy ma status CONFIRMED, to cała lekcja jest aktywna
+                if (res.status === 'CONFIRMED') existingGroup.status = 'CONFIRMED';
+            }
+        });
+
+        return Array.from(groupedMap.values());
+    };
+
     const now = new Date();
 
-
-    const upcomingReservations = reservations
+    const rawUpcoming = reservations
         .filter(res => new Date(res.startTime) >= now && res.status !== 'CANCELLED')
         .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
-
-    const pastReservations = reservations
+    const rawPast = reservations
         .filter(res => new Date(res.startTime) < now || res.status === 'CANCELLED')
         .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+    const upcomingReservations = userRole === 'ADMIN' ? getGroupedReservations(rawUpcoming) : rawUpcoming;
+    const pastReservations = userRole === 'ADMIN' ? getGroupedReservations(rawPast) : rawPast;
 
     const displayedReservations = activeTab === 'upcoming' ? upcomingReservations : pastReservations;
 
@@ -518,7 +549,23 @@ const ReservationsPage = () => {
                                     <p className={styles.timeInfo}>
                                         <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
-                                    <p className={styles.studentInfo}>Uczeń: <strong>{res.studentName}</strong></p>
+
+
+                                    {userRole === 'ADMIN' ? (
+                                        <div style={{ marginTop: '8px', fontSize: '0.88rem', color: '#444' }}>
+                                            <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#d28b5b' }}>
+                                                <FaUsers /> Zapisani uczniowie ({res.bookingCount} / 5):
+                                            </p>
+                                            <ul style={{ margin: 0, paddingLeft: '18px', color: '#555' }}>
+                                                {res.studentsList && res.studentsList.map((name, idx) => (
+                                                    <li key={idx}><strong>{name}</strong></li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ) : (
+
+                                        <p className={styles.studentInfo}>Uczeń: <strong>{res.studentName}</strong></p>
+                                    )}
                                 </div>
 
                                 <div className={styles.resFooter}>

@@ -46,8 +46,26 @@ public class ReservationService {
         AvailabilitySlot slot = slotRepository.findById(slotId)
                 .orElseThrow(() -> new NotFoundException("Termin nie istnieje"));
 
-        if (slot.isReserved()) {
-            throw new BadRequestException("Ten termin jest już zarezerwowany.");
+        boolean alreadyBookedByStudent = reservationRepository
+                .findAllByStudentIdOrderByStartTimeDesc(student.getId()).stream()
+                .anyMatch(r -> r.getAvailabilitySlot() != null
+                        && r.getAvailabilitySlot().getId().equals(slotId)
+                        && r.getStatus() != ReservationStatus.CANCELLED);
+
+        if (alreadyBookedByStudent) {
+            throw new BadRequestException("Jesteś już zapisany/a na ten termin.");
+        }
+
+        String slotType = slot.getLessonType() != null ? slot.getLessonType().toString().toLowerCase() : "";
+        boolean isGroup = slotType.contains("group") || slotType.contains("grup");
+
+        int maxCapacity = isGroup ? 5 : 1;
+
+        long currentBookingsCount = reservationRepository.countByAvailabilitySlotIdAndStatusNot(slot.getId(),
+                ReservationStatus.CANCELLED);
+
+        if (currentBookingsCount >= maxCapacity) {
+            throw new BadRequestException("Brak wolnych miejsc w tej grupie (zapisano maksymalną liczbę uczniów).");
         }
 
         LessonOffer offer = userPackage.getLessonOffer();
@@ -56,13 +74,10 @@ public class ReservationService {
         String offerLevel = offer.getLevel() != null ? offer.getLevel().toString().trim() : "";
         boolean levelMatches = slotLevel.equalsIgnoreCase(offerLevel);
 
-        String slotType = slot.getLessonType() != null ? slot.getLessonType().toString().toLowerCase() : "";
         String offerType = offer.getLessonType() != null ? offer.getLessonType().toString().toLowerCase() : "";
-
-        boolean isSlotGroup = slotType.contains("group") || slotType.contains("grup");
         boolean isOfferGroup = offerType.contains("group") || offerType.contains("grup");
 
-        boolean typeMatches = (isSlotGroup == isOfferGroup);
+        boolean typeMatches = (isGroup == isOfferGroup);
 
         if (!levelMatches || !typeMatches) {
             throw new BadRequestException(
@@ -70,8 +85,10 @@ public class ReservationService {
                             slotLevel, slotType, offerLevel, offerType));
         }
 
-        slot.setReserved(true);
-        slotRepository.save(slot);
+        if (currentBookingsCount + 1 >= maxCapacity) {
+            slot.setReserved(true);
+            slotRepository.save(slot);
+        }
 
         userPackage.setRemainingLessons(userPackage.getRemainingLessons() - 1);
         packageRepository.save(userPackage);
@@ -150,8 +167,7 @@ public class ReservationService {
             emailService.sendReservationCancellationEmail(
                     student.getEmail(),
                     student.getFullName(),
-                    reservation.getUserPackage() != null ? reservation.getUserPackage().getLessonOffer().getTitle()
-                            : "Lekcja",
+                    getLessonTitleSafely(reservation),
                     reservation.getStartTime(),
                     isRefunded,
                     false);
@@ -179,9 +195,7 @@ public class ReservationService {
             emailService.sendReservationCancellationEmail(
                     student.getEmail(),
                     student.getFullName(),
-                    reservation.getUserPackage() != null && reservation.getUserPackage().getLessonOffer() != null
-                            ? reservation.getUserPackage().getLessonOffer().getTitle()
-                            : "Lekcja",
+                    getLessonTitleSafely(reservation),
                     reservation.getStartTime(),
                     true,
                     true);
@@ -218,5 +232,12 @@ public class ReservationService {
         }
 
         reservationRepository.save(reservation);
+    }
+
+    private String getLessonTitleSafely(Reservation reservation) {
+        if (reservation.getUserPackage() != null && reservation.getUserPackage().getLessonOffer() != null) {
+            return reservation.getUserPackage().getLessonOffer().getTitle();
+        }
+        return "Lekcja";
     }
 }

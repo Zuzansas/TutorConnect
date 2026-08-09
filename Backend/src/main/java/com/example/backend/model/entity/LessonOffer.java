@@ -24,6 +24,11 @@ public class LessonOffer {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("true")
+    @Builder.Default
+    private boolean active = true;
+
     @Column(nullable = false, length = 100)
     private String title;
 

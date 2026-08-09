@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.example.backend.model.exception.NotFoundException;
+
 @Service
 @RequiredArgsConstructor
 public class LessonOfferService {
@@ -83,11 +85,13 @@ public class LessonOfferService {
         return toResponse(offer);
     }
 
-    public void deleteOffer(UUID id) {
-        if (!lessonOfferRepository.existsById(id)) {
-            throw new RuntimeException("Oferta nie istnieje");
-        }
-        lessonOfferRepository.deleteById(id);
+    @Transactional
+    public void deleteOffer(UUID offerId) {
+        LessonOffer offer = lessonOfferRepository.findById(offerId)
+                .orElseThrow(() -> new NotFoundException("Oferta nie istnieje"));
+
+        offer.setActive(false);
+        lessonOfferRepository.save(offer);
     }
 
     public LessonOfferResponse getOffer(UUID id) {
@@ -98,9 +102,9 @@ public class LessonOfferService {
     }
 
     public List<LessonOfferResponse> getAllOffers() {
-        List<LessonOffer> allOffers = lessonOfferRepository.findAll();
+        List<LessonOffer> activeOffers = lessonOfferRepository.findAllByActiveTrue();
 
-        return allOffers.stream()
+        return activeOffers.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
