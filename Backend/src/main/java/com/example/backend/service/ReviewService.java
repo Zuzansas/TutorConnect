@@ -9,12 +9,9 @@ import com.example.backend.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
-
-import javax.crypto.BadPaddingException;
 
 @Service
 @RequiredArgsConstructor
