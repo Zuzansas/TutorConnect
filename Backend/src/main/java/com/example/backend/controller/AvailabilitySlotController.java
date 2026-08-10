@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -42,6 +43,14 @@ public class AvailabilitySlotController {
         userService.validateAdminAccess(principal.getName());
 
         return slotService.createSlot(request);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
+    public ResponseEntity<List<AvailabilitySlotResponse>> getAllSlots(
+            @RequestParam Instant from,
+            @RequestParam Instant to) {
+        return ResponseEntity.ok(slotService.getAllSlots(from, to));
     }
 
     @Operation(summary = "Pobierz wolne terminy (Ogólne)", description = "Zwraca listę wszystkich dostępnych slotów w podanym zakresie dat.")

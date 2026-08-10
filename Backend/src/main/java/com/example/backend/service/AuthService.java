@@ -61,18 +61,16 @@ public class AuthService {
                 .bio(request.bio())
                 .avatarURL(avatarUrl)
                 .createdAt(Instant.now())
-                .active(false) // 👈 Domyślnie NIEAKTYWNY
-                .validatedEmail(false) // 👈 E-mail niepotwierdzony
+                .active(false)
+                .validatedEmail(false)
                 .build();
 
         userService.saveUser(user);
 
-        // Wygeneruj token aktywacyjny (ważny 24 godziny)
         String activationToken = UUID.randomUUID().toString();
         emailVerificationTokenRepository.save(new EmailVerificationToken(
                 activationToken, user, Instant.now().plus(24, ChronoUnit.HOURS)));
 
-        // Wyślij e-mail z linkiem aktywacyjnym
         emailService.sendActivationEmail(user.getEmail(), user.getFullName(), activationToken);
     }
 
@@ -91,7 +89,6 @@ public class AuthService {
         user.setValidatedEmail(true);
         userService.saveUser(user);
 
-        // Usuwamy zużyty token
         emailVerificationTokenRepository.delete(verificationToken);
     }
 
@@ -102,7 +99,6 @@ public class AuthService {
             throw new AuthException("Nieprawidłowe hasło");
         }
 
-        // ⬇️ BLOKADA LOGOWANIA DLA NIEAKTYWNYCH KONT
         if (Boolean.FALSE.equals(user.getValidatedEmail()) || Boolean.FALSE.equals(user.getActive())) {
             throw new AuthException(
                     "Konto nie zostało jeszcze aktywowane. Sprawdź swoją skrzynkę e-mail i kliknij link aktywacyjny.");

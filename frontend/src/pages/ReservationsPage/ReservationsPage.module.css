@@ -452,6 +452,117 @@
     background: #fdf2f2;
 }
 
+
+.studentHoverContainer {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.studentNameHover {
+    color: #2c3e50;
+    transition: color 0.2s ease;
+    border-bottom: 1px dashed #d28b5b;
+}
+
+.studentNameHover:hover {
+    color: #d28b5b;
+}
+
+
+.studentTooltip {
+    visibility: hidden;
+    opacity: 0;
+    width: 280px;
+    background-color: #ffffff;
+    border: 1px solid #f1ece8;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    padding: 14px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+}
+
+
+.studentTooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: #ffffff transparent transparent transparent;
+}
+
+
+.studentHoverContainer:hover .studentTooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+
+.tooltipHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1ece8;
+}
+
+.tooltipAvatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fdf2eb;
+}
+
+.tooltipName {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.tooltipCity {
+    margin: 2px 0 0 0;
+    font-size: 0.75rem;
+    color: #7f8c8d;
+}
+
+.tooltipEmail {
+    margin: 2px 0 0 0;
+    font-size: 0.72rem;
+    color: #d28b5b;
+    word-break: break-all;
+}
+
+.tooltipBioSection h6 {
+    margin: 0 0 4px 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #d28b5b;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.tooltipBioSection p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #555555;
+    line-height: 1.4;
+    max-height: 80px;
+    overflow-y: auto;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

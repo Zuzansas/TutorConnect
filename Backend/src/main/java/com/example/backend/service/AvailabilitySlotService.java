@@ -70,6 +70,13 @@ public class AvailabilitySlotService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<AvailabilitySlotResponse> getAllSlots(Instant from, Instant to) {
+        return slotRepository.findAllByStartTimeBetween(from, to).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private AvailabilitySlotResponse toResponse(AvailabilitySlot slot) {
         return AvailabilitySlotResponse.builder()
                 .id(slot.getId())

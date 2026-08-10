@@ -14,11 +14,21 @@ const AdminCalendarPage = () => {
 
     const fetchData = async (start, end) => {
         try {
+
             const slotsRes = await fetch(
-                `http://localhost:8080/api/slots/available?from=${start.toISOString()}&to=${end.toISOString()}`,
+                `http://localhost:8080/api/slots?from=${start.toISOString()}&to=${end.toISOString()}`,
                 { headers: { 'Authorization': `Bearer ${token}` } }
             );
-            const slotsData = await slotsRes.json();
+
+
+            let slotsData = slotsRes.ok ? await slotsRes.json() : [];
+            if (!slotsRes.ok) {
+                const fallbackRes = await fetch(
+                    `http://localhost:8080/api/slots/available?from=${start.toISOString()}&to=${end.toISOString()}`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+                slotsData = await fallbackRes.json();
+            }
 
             const reservationsRes = await fetch(
                 `http://localhost:8080/api/reservations`,
@@ -26,35 +36,65 @@ const AdminCalendarPage = () => {
             );
             const reservationsData = await reservationsRes.json();
 
-
             const activeReservations = reservationsData.filter(res => res.status !== 'CANCELLED');
 
 
-            const calendarEvents = slotsData.map(slot => {
-                const isGroup = slot.lessonType && slot.lessonType.toString().toLowerCase().includes('group');
+            const existingSlotIds = new Set(slotsData.map(s => s.id));
+            const virtualSlots = [];
+
+            activeReservations.forEach(res => {
+
+                const slotId = res.slotId || res.availabilitySlot?.id || res.slot?.id;
+
+                if (slotId && !existingSlotIds.has(slotId)) {
+                    existingSlotIds.add(slotId);
+                    virtualSlots.push({
+                        id: slotId,
+                        startTime: res.startTime,
+                        endTime: res.endTime,
+                        level: res.level || res.lessonOffer?.level || '',
+                        lessonType: res.lessonType || res.lessonOffer?.lessonType || 'INDIVIDUAL',
+                        capacity: 1,
+                        isReserved: true
+                    });
+                }
+            });
+
+
+            const allSlotsToRender = [...slotsData, ...virtualSlots];
+
+
+            const calendarEvents = allSlotsToRender.map(slot => {
+                const slotTypeNorm = slot.lessonType ? slot.lessonType.toString().toLowerCase() : '';
+                const isGroup = slotTypeNorm.includes('group') || slotTypeNorm.includes('grup');
                 const maxCapacity = slot.capacity || (isGroup ? 5 : 1);
 
 
                 const matchingReservations = activeReservations.filter(res => {
-                    const slotId = res.slotId || res.availabilitySlot?.id;
-                    return slotId === slot.id || (res.startTime === slot.startTime && res.endTime === slot.endTime);
+                    const resSlotId = res.slotId || res.availabilitySlot?.id || res.slot?.id;
+                    return resSlotId === slot.id || (
+                        new Date(res.startTime).getTime() === new Date(slot.startTime).getTime() &&
+                        new Date(res.endTime).getTime() === new Date(slot.endTime).getTime()
+                    );
                 });
 
                 const bookingsCount = matchingReservations.length;
-                const isFull = bookingsCount >= maxCapacity;
 
+
+                const isFull = bookingsCount >= maxCapacity || slot.isReserved;
 
                 let bgBtnColor = '#2ecc71';
                 let statusTitle = `WOLNY (${slot.level || ''} - ${isGroup ? 'Grupowe' : 'Indyw.'})`;
 
                 if (bookingsCount > 0 && !isFull) {
                     bgBtnColor = '#f39c12';
-                    statusTitle = `GRUPA (${bookingsCount}/${maxCapacity}): ${matchingReservations.map(r => r.studentName).join(', ')}`;
-                } else if (isFull) {
+                    statusTitle = `GRUPA (${bookingsCount}/${maxCapacity}): ${matchingReservations.map(r => r.studentName || r.student?.fullName).join(', ')}`;
+                } else if (isFull || bookingsCount > 0) {
                     bgBtnColor = '#d28b5b';
+                    const namesList = matchingReservations.map(r => r.studentName || r.student?.fullName).filter(Boolean).join(', ');
                     statusTitle = isGroup
-                        ? `KOMPLET (${bookingsCount}/${maxCapacity}): ${matchingReservations.map(r => r.studentName).join(', ')}`
-                        : `ZAREZERWOWANE: ${matchingReservations.map(r => r.studentName).join(', ') || 'Uczeń'}`;
+                        ? `KOMPLET (${bookingsCount}/${maxCapacity}): ${namesList}`
+                        : `ZAREZERWOWANE: ${namesList || 'Uczeń'}`;
                 }
 
                 return {
@@ -79,6 +119,7 @@ const AdminCalendarPage = () => {
 
             setEvents(calendarEvents);
         } catch (error) {
+            console.error("Błąd kalendarza:", error);
             toast.error("Błąd pobierania danych kalendarza");
         }
     };

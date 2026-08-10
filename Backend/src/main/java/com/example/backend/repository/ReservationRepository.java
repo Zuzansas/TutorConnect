@@ -14,6 +14,8 @@ import java.util.UUID;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
+        List<Reservation> findAllByAvailabilitySlotIdAndStatusNot(UUID slotId, ReservationStatus status);
+
         long countByAvailabilitySlotIdAndStatusNot(UUID slotId, ReservationStatus status);
 
         List<Reservation> findAllByStudentIdOrderByStartTimeDesc(UUID studentId);

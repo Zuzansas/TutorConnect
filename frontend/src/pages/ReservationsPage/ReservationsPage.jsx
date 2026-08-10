@@ -355,26 +355,34 @@ const ReservationsPage = () => {
             const slotId = res.slotId || res.availabilitySlot?.id;
             const groupKey = slotId || `${res.startTime}_${res.lessonTitle}`;
 
-            const studentName = res.studentName || res.student?.fullName || res.student?.username || 'Uczeń';
-            const studentEmail = res.studentEmail || res.student?.email;
+            // Tworzymy pełny obiekt z informacjami o uczniu
+            const studentObj = {
+                id: res.studentId || res.student?.id,
+                name: res.studentName || res.student?.fullName || res.student?.username || 'Uczeń',
+                email: res.studentEmail || res.student?.email || '',
+                bio: res.studentBio || res.student?.bio || 'Brak opisu o użytkowniku...',
+                city: res.studentCity || res.student?.city || '',
+                avatarUrl: res.studentAvatarUrl || res.student?.avatarUrl || 'https://via.placeholder.com/60?text=Uczeń'
+            };
 
             if (!groupedMap.has(groupKey)) {
                 groupedMap.set(groupKey, {
                     ...res,
                     slotId: slotId,
-                    studentsList: [studentName],
-                    studentEmails: studentEmail ? [studentEmail] : [],
+                    studentsDetails: [studentObj], // 👈 Lista pełnych obiektów uczniów
+                    studentEmails: studentObj.email ? [studentObj.email] : [],
                     bookingCount: 1
                 });
             } else {
                 const existingGroup = groupedMap.get(groupKey);
 
-                if (!existingGroup.studentsList.includes(studentName)) {
-                    existingGroup.studentsList.push(studentName);
+                const alreadyExists = existingGroup.studentsDetails.some(s => s.name === studentObj.name);
+                if (!alreadyExists) {
+                    existingGroup.studentsDetails.push(studentObj);
                 }
 
-                if (studentEmail && !existingGroup.studentEmails.includes(studentEmail)) {
-                    existingGroup.studentEmails.push(studentEmail);
+                if (studentObj.email && !existingGroup.studentEmails.includes(studentObj.email)) {
+                    existingGroup.studentEmails.push(studentObj.email);
                 }
 
                 existingGroup.bookingCount += 1;
@@ -584,18 +592,95 @@ const ReservationsPage = () => {
                                         <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
 
+
                                     {userRole === 'ADMIN' ? (
-                                        <div style={{ marginTop: '8px', fontSize: '0.88rem', color: '#444' }}>
-                                            <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#d28b5b' }}>
-                                                <FaUsers /> Zapisani uczniowie ({res.bookingCount} / 5):
-                                            </p>
-                                            <ul style={{ margin: 0, paddingLeft: '18px', color: '#555' }}>
-                                                {res.studentsList && res.studentsList.map((name, idx) => (
-                                                    <li key={idx}><strong>{name}</strong></li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        (() => {
+
+                                            const isGroup = isGroupType(res.lessonTitle) || isGroupType(res.lessonOffer?.lessonType) || isGroupType(res.availabilitySlot?.lessonType);
+
+                                            if (isGroup) {
+
+                                                return (
+                                                    <div style={{ marginTop: '8px', fontSize: '0.88rem', color: '#444' }}>
+                                                        <p style={{ margin: '0 0 6px 0', fontWeight: 'bold', color: '#d28b5b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <FaUsers /> Zapisani uczniowie ({res.bookingCount || 1} / 5):
+                                                        </p>
+                                                        <ul style={{ margin: 0, paddingLeft: '18px', color: '#555' }}>
+                                                            {res.studentsDetails && res.studentsDetails.map((student, idx) => (
+                                                                <li key={idx} style={{ marginBottom: '4px' }}>
+                                                                    <span className={styles.studentHoverContainer}>
+                                                                        <strong className={styles.studentNameHover}>{student.name}</strong>
+
+                                                                        <div className={styles.studentTooltip}>
+                                                                            <div className={styles.tooltipHeader}>
+                                                                                <img
+                                                                                    src={student.avatarUrl}
+                                                                                    alt={student.name}
+                                                                                    className={styles.tooltipAvatar}
+                                                                                    onError={(e) => { e.target.src = 'https://via.placeholder.com/60?text=Uczeń'; }}
+                                                                                />
+                                                                                <div>
+                                                                                    <h5 className={styles.tooltipName}>{student.name}</h5>
+                                                                                    {student.city && <p className={styles.tooltipCity}>📍 {student.city}</p>}
+                                                                                    {student.email && <p className={styles.tooltipEmail}>✉️ {student.email}</p>}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className={styles.tooltipBioSection}>
+                                                                                <h6>O uczniu:</h6>
+                                                                                <p>{student.bio}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                );
+                                            } else {
+
+                                                const firstStudent = res.studentsDetails?.[0] || {
+                                                    name: res.studentName || 'Uczeń',
+                                                    email: res.studentEmail || '',
+                                                    city: res.studentCity || '',
+                                                    bio: res.studentBio || 'Brak opisu...',
+                                                    avatarUrl: res.studentAvatarUrl || 'https://via.placeholder.com/60?text=Uczeń'
+                                                };
+
+                                                return (
+                                                    <div style={{ marginTop: '8px', fontSize: '0.88rem', color: '#444' }}>
+                                                        <p style={{ margin: '0 0 4px 0', color: '#7f8c8d', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <FaUser style={{ color: '#d28b5b' }} /> Uczeń:
+                                                            <span className={styles.studentHoverContainer}>
+                                                                <strong className={styles.studentNameHover}>{firstStudent.name}</strong>
+
+
+                                                                <div className={styles.studentTooltip}>
+                                                                    <div className={styles.tooltipHeader}>
+                                                                        <img
+                                                                            src={firstStudent.avatarUrl}
+                                                                            alt={firstStudent.name}
+                                                                            className={styles.tooltipAvatar}
+                                                                            onError={(e) => { e.target.src = 'https://via.placeholder.com/60?text=Uczeń'; }}
+                                                                        />
+                                                                        <div>
+                                                                            <h5 className={styles.tooltipName}>{firstStudent.name}</h5>
+                                                                            {firstStudent.city && <p className={styles.tooltipCity}>📍 {firstStudent.city}</p>}
+                                                                            {firstStudent.email && <p className={styles.tooltipEmail}>✉️ {firstStudent.email}</p>}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className={styles.tooltipBioSection}>
+                                                                        <h6>O uczniu:</h6>
+                                                                        <p>{firstStudent.bio}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                        })()
                                     ) : (
+
                                         <p className={styles.studentInfo}>Uczeń: <strong>{res.studentName}</strong></p>
                                     )}
                                 </div>
