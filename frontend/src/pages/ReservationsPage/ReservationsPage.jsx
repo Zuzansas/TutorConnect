@@ -355,7 +355,8 @@ const ReservationsPage = () => {
             const slotId = res.slotId || res.availabilitySlot?.id;
             const groupKey = slotId || `${res.startTime}_${res.lessonTitle}`;
 
-            // Tworzymy pełny obiekt z informacjami o uczniu
+            const slotDesc = res.slotDescription || res.availabilitySlot?.description || res.description || '';
+
             const studentObj = {
                 id: res.studentId || res.student?.id,
                 name: res.studentName || res.student?.fullName || res.student?.username || 'Uczeń',
@@ -369,7 +370,8 @@ const ReservationsPage = () => {
                 groupedMap.set(groupKey, {
                     ...res,
                     slotId: slotId,
-                    studentsDetails: [studentObj], // 👈 Lista pełnych obiektów uczniów
+                    slotDescription: slotDesc,
+                    studentsDetails: [studentObj],
                     studentEmails: studentObj.email ? [studentObj.email] : [],
                     bookingCount: 1
                 });
@@ -588,6 +590,21 @@ const ReservationsPage = () => {
 
                                 <div className={styles.resBody}>
                                     <h3 className={styles.resTitle}>{res.lessonTitle}</h3>
+                                    {(res.slotDescription || res.availabilitySlot?.description || res.description) && (
+                                        <p style={{
+                                            margin: '0 0 8px 0',
+                                            fontSize: '0.85rem',
+                                            color: '#d28b5b',
+                                            fontStyle: 'italic',
+                                            background: '#fdf2eb',
+                                            padding: '4px 10px',
+                                            borderRadius: '6px',
+                                            display: 'inline-block',
+                                            fontWeight: '600'
+                                        }}>
+                                            📌 {res.slotDescription || res.availabilitySlot?.description || res.description}
+                                        </p>
+                                    )}
                                     <p className={styles.timeInfo}>
                                         <FaRegClock /> {new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>

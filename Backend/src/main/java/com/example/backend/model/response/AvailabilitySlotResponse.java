@@ -14,4 +14,5 @@ public class AvailabilitySlotResponse {
     private String level;
     private String lessonType;
     private boolean isReserved;
+    private String description;
 }

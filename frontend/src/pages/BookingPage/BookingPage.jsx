@@ -103,7 +103,7 @@ const BookingPage = () => {
     const handleBooking = async () => {
         if (!selectedSlot || !userPackage) return;
 
-        // Dodatkowa weryfikacja przed wysłaniem formularza
+
         if (isTooLateToBook(selectedSlot.startTime)) {
             toast.error("Rezerwacji można dokonać najpóźniej na 24h przed zajęciami.");
             return;
@@ -116,6 +116,13 @@ const BookingPage = () => {
                     <p>Wybierasz termin dla pakietu: <b>${userPackage.lessonOffer.title}</b></p>
                     <p>Data zajęć: <b>${new Date(selectedSlot.startTime).toLocaleString()}</b></p>
                     <p style="color: #777;">Po utworzeniu rezerwacji Twój pakiet zmniejszy się o 1 lekcję.</p>
+
+                    ${selectedSlot.description ? `
+                <div style="background: #fdf2eb; border-left: 4px solid #d28b5b; padding: 10px 12px; border-radius: 6px; margin: 12px 0;">
+                    <b style="color: #d28b5b; font-size: 0.85rem;">📌 Temat / Opis zajęć:</b>
+                    <p style="margin: 4px 0 0 0; color: #444; font-size: 0.9rem;">${selectedSlot.description}</p>
+                </div>
+            ` : ''}
                 </div>
             `,
             icon: 'question',
@@ -218,6 +225,23 @@ const BookingPage = () => {
                                     <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>
                                         {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
+
+                                    {slot.description && (
+                                        <span style={{
+                                            display: 'block',
+                                            fontSize: '0.75rem',
+                                            marginTop: '2px',
+                                            color: isSelected ? '#ffffff' : '#d28b5b',
+                                            fontStyle: 'italic',
+                                            fontWeight: '500',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            maxWidth: '100%'
+                                        }}>
+                                            📌 {slot.description}
+                                        </span>
+                                    )}
 
 
                                     {isGroup && !disabled && (

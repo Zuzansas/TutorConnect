@@ -127,14 +127,7 @@ public class ReservationController {
         })
         @GetMapping
         public ResponseEntity<List<ReservationResponse>> getReservations(Principal principal) {
-
-                List<Reservation> reservations = reservationService.getReservations(principal.getName());
-
-                List<ReservationResponse> response = reservations.stream()
-                                .map(this::toResponse)
-                                .toList();
-
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(reservationService.getReservations(principal.getName()));
         }
 
         private ReservationResponse toResponse(Reservation r) {

@@ -20,6 +20,8 @@ public class ReservationResponse {
     private String studentCity;
     private String studentAvatarUrl;
 
+    private String slotDescription;
+
     private Instant startTime;
     private Instant endTime;
     private BigDecimal price;

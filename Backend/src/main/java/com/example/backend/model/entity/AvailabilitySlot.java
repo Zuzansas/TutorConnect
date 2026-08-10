@@ -37,6 +37,9 @@ public class AvailabilitySlot {
     @Builder.Default
     private Integer capacity = 1;
 
+    @Column(length = 500)
+    private String description;
+
     public Integer getCapacity() {
         return capacity != null ? capacity : 1;
     }

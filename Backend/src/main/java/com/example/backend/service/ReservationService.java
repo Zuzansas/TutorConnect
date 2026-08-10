@@ -4,6 +4,7 @@ import com.example.backend.model.entity.*;
 import com.example.backend.model.enums.ReservationStatus;
 import com.example.backend.model.exception.BadRequestException;
 import com.example.backend.model.exception.NotFoundException;
+import com.example.backend.model.response.ReservationResponse;
 import com.example.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,39 @@ public class ReservationService {
     private final EmailService emailService;
 
     private static final long CANCELLATION_DEADLINE_HOURS = 12;
+
+    public ReservationResponse toResponse(Reservation reservation) {
+
+        String slotDescription = null;
+        if (reservation.getAvailabilitySlot() != null) {
+            slotDescription = reservation.getAvailabilitySlot().getDescription();
+        }
+
+        User student = reservation.getStudent();
+
+        return ReservationResponse.builder()
+                .id(reservation.getId())
+                .lessonOfferId(
+                        reservation.getUserPackage() != null && reservation.getUserPackage().getLessonOffer() != null
+                                ? reservation.getUserPackage().getLessonOffer().getId()
+                                : null)
+                .lessonTitle(getLessonTitleSafely(reservation))
+                .slotDescription(slotDescription)
+
+                .studentName(student != null
+                        ? (student.getFullName() != null ? student.getFullName() : student.getUsername())
+                        : "Uczeń")
+                .studentEmail(student != null ? student.getEmail() : null)
+                .studentBio(student != null ? student.getBio() : null)
+                .studentCity(student != null ? student.getCity() : null)
+
+                .startTime(reservation.getStartTime())
+                .endTime(reservation.getEndTime())
+                .price(reservation.getPrice())
+                .status(reservation.getStatus())
+                .createdAt(reservation.getCreatedAt())
+                .build();
+    }
 
     @Transactional
     public Reservation createReservation(UUID userPackageId, UUID slotId, String principalName) {
@@ -245,15 +279,21 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-    public List<Reservation> getReservations(String principalName) {
+    public List<ReservationResponse> getReservations(String principalName) {
         User user = userRepository.findByEmail(principalName)
                 .orElseGet(() -> userRepository.findByUsername(principalName)
                         .orElseThrow(() -> new NotFoundException("Użytkownik nie istnieje")));
 
+        List<Reservation> reservations;
         if (user.isAdmin()) {
-            return reservationRepository.findAllByOrderByStartTimeDesc();
+            reservations = reservationRepository.findAllByOrderByStartTimeDesc();
+        } else {
+            reservations = reservationRepository.findAllByStudentIdOrderByStartTimeDesc(user.getId());
         }
-        return reservationRepository.findAllByStudentIdOrderByStartTimeDesc(user.getId());
+
+        return reservations.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private void cancelReservationAndRefund(Reservation reservation) {

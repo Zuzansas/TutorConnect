@@ -34,6 +34,7 @@ public class AvailabilitySlotService {
                 .endTime(request.endTime())
                 .level(request.level())
                 .lessonType(request.lessonType())
+                .description(request.description())
                 .isReserved(false)
                 .build();
         slotRepository.save(slot);
@@ -85,6 +86,7 @@ public class AvailabilitySlotService {
                 .level(slot.getLevel())
                 .lessonType(slot.getLessonType())
                 .isReserved(slot.isReserved())
+                .description(slot.getDescription())
                 .build();
     }
 }

@@ -79,22 +79,23 @@ const AdminCalendarPage = () => {
                 });
 
                 const bookingsCount = matchingReservations.length;
-
-
                 const isFull = bookingsCount >= maxCapacity || slot.isReserved;
 
+
+                const slotDesc = slot.description ? `\n📌 ${slot.description}` : '';
+
                 let bgBtnColor = '#2ecc71';
-                let statusTitle = `WOLNY (${slot.level || ''} - ${isGroup ? 'Grupowe' : 'Indyw.'})`;
+                let statusTitle = `WOLNY (${slot.level || ''} - ${isGroup ? 'Grupowe' : 'Indyw.'})${slotDesc}`;
 
                 if (bookingsCount > 0 && !isFull) {
                     bgBtnColor = '#f39c12';
-                    statusTitle = `GRUPA (${bookingsCount}/${maxCapacity}): ${matchingReservations.map(r => r.studentName || r.student?.fullName).join(', ')}`;
+                    statusTitle = `GRUPA (${bookingsCount}/${maxCapacity})${slotDesc}\nOsoby: ${matchingReservations.map(r => r.studentName || r.student?.fullName).join(', ')}`;
                 } else if (isFull || bookingsCount > 0) {
                     bgBtnColor = '#d28b5b';
                     const namesList = matchingReservations.map(r => r.studentName || r.student?.fullName).filter(Boolean).join(', ');
                     statusTitle = isGroup
-                        ? `KOMPLET (${bookingsCount}/${maxCapacity}): ${namesList}`
-                        : `ZAREZERWOWANE: ${namesList || 'Uczeń'}`;
+                        ? `KOMPLET (${bookingsCount}/${maxCapacity})${slotDesc}\nOsoby: ${namesList}`
+                        : `ZAREZERWOWANE${slotDesc}\nUczeń: ${namesList || 'Uczeń'}`;
                 }
 
                 return {
@@ -105,6 +106,7 @@ const AdminCalendarPage = () => {
                     backgroundColor: bgBtnColor,
                     textColor: '#ffffff',
                     extendedProps: {
+                        description: slot.description,
                         type: 'SLOT_WITH_RESERVATIONS',
                         slotId: slot.id,
                         level: slot.level,
@@ -131,38 +133,39 @@ const AdminCalendarPage = () => {
         const { value: formValues } = await Swal.fire({
             title: '<span style="color: #2c3e50; font-size: 1.3rem; font-weight: 800;">Dodaj termin do kalendarza</span>',
             html: `
-            <div style="display: flex; flex-direction: column; gap: 16px; text-align: left; font-family: 'Inter', sans-serif; padding-top: 5px;">
-                <div style="background: #fdfaf8; border: 1px solid #f1ece8; padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 0.85rem; color: #7f8c8d;">
-                        <b>${selectInfo.start.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}</b>
-                    </div>
-                    <div style="font-size: 0.9rem; font-weight: 700; color: #d28b5b;">
-                        ${selectInfo.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${selectInfo.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                </div>
+    <div style="display: flex; flex-direction: column; gap: 14px; text-align: left; font-family: 'Inter', sans-serif;">
+        <!-- PODSUMOWANIE GODZIN -->
+        <div style="background: #fdfaf8; border: 1px solid #f1ece8; padding: 10px 14px; border-radius: 12px; display: flex; justify-content: space-between;">
+            <span style="font-size: 0.85rem; color: #7f8c8d;"><b>${selectInfo.start.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}</b></span>
+            <span style="font-size: 0.9rem; font-weight: 700; color: #d28b5b;">${selectInfo.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${selectInfo.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
 
-                <div>
-                    <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 8px;">
-                        Poziom zaawansowania
-                    </label>
-                    <div id="level-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                        <div data-val="Podstawowy" class="swal-option-card active-option" style="padding: 10px 8px; border: 2px solid #d28b5b; background: #fdf2eb; color: #d28b5b; border-radius: 10px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700;">Podstawowy</div>
-                        <div data-val="Średni" class="swal-option-card" style="padding: 10px 8px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 10px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700;">Średni</div>
-                        <div data-val="Rozszerzony" class="swal-option-card" style="padding: 10px 8px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 10px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700;">Rozszerzony</div>
-                    </div>
-                </div>
-
-                <div>
-                    <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 8px;">
-                        Typ zajęć
-                    </label>
-                    <div id="type-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div data-val="INDIVIDUAL" class="swal-type-card active-type" style="padding: 12px; border: 2px solid #d28b5b; background: #fdf2eb; color: #d28b5b; border-radius: 12px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 700;">Indywidualne</div>
-                        <div data-val="GROUP" class="swal-type-card" style="padding: 12px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 12px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 700;">Grupowe</div>
-                    </div>
-                </div>
+        <!-- POZIOM ZAJĘĆ -->
+        <div>
+            <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 6px;">Poziom zaawansowania</label>
+            <div id="level-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <div data-val="Podstawowy" class="swal-option-card active-option" style="padding: 8px; border: 2px solid #d28b5b; background: #fdf2eb; color: #d28b5b; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700;">Podstawowy</div>
+                <div data-val="Średni" class="swal-option-card" style="padding: 8px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700;">Średni</div>
+                <div data-val="Rozszerzony" class="swal-option-card" style="padding: 8px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.8rem; font-weight: 700;">Rozszerzony</div>
             </div>
-            `,
+        </div>
+
+        <!-- TYP ZAJĘĆ -->
+        <div>
+            <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 6px;">Typ zajęć</label>
+            <div id="type-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div data-val="INDIVIDUAL" class="swal-type-card active-type" style="padding: 10px; border: 2px solid #d28b5b; background: #fdf2eb; color: #d28b5b; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 700;">Indywidualne</div>
+                <div data-val="GROUP" class="swal-type-card" style="padding: 10px; border: 2px solid #e9ecef; background: #fff; color: #555; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 700;">Grupowe</div>
+            </div>
+        </div>
+
+        <!-- ⬇️ NOWE POLE: OPIS SLOTU -->
+        <div>
+            <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 6px;">Opis zajęć (opcjonalnie)</label>
+            <input id="swal-slot-desc" class="swal2-input" style="margin: 0; width: 100%; border-radius: 8px; font-size: 0.85rem;" placeholder="np. Temat: Równania kwadratowe">
+        </div>
+    </div>
+    `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonColor: '#d28b5b',
@@ -170,7 +173,6 @@ const AdminCalendarPage = () => {
             confirmButtonText: 'Utwórz slot',
             cancelButtonText: 'Anuluj',
             width: '420px',
-            customClass: { popup: styles.swalSoftPopup },
             didOpen: () => {
                 const levelCards = document.querySelectorAll('#level-options .swal-option-card');
                 levelCards.forEach(card => {
@@ -190,7 +192,11 @@ const AdminCalendarPage = () => {
                     });
                 });
             },
-            preConfirm: () => ({ level: selectedLevel, lessonType: selectedType })
+            preConfirm: () => ({
+                level: selectedLevel,
+                lessonType: selectedType,
+                description: document.getElementById('swal-slot-desc').value
+            })
         });
 
         if (formValues) {
@@ -205,16 +211,14 @@ const AdminCalendarPage = () => {
                         startTime: selectInfo.start.toISOString(),
                         endTime: selectInfo.end.toISOString(),
                         level: formValues.level,
-                        lessonType: formValues.lessonType
+                        lessonType: formValues.lessonType,
+                        description: formValues.description
                     })
                 });
 
                 if (response.ok) {
                     toast.success("Termin został utworzony!");
                     fetchData(selectInfo.view.activeStart, selectInfo.view.activeEnd);
-                } else {
-                    const errData = await response.json();
-                    toast.error("Błąd zapisu slotu: " + (errData.message || 'Niepoprawne dane'));
                 }
             } catch (error) {
                 toast.error("Błąd połączenia z serwerem");
@@ -223,7 +227,7 @@ const AdminCalendarPage = () => {
     };
 
     const handleEventClick = async (clickInfo) => {
-        const { slotId, reservations, bookingsCount, maxCapacity, isGroup } = clickInfo.event.extendedProps;
+        const { description, slotId, reservations, bookingsCount, maxCapacity, isGroup } = clickInfo.event.extendedProps;
 
         if (bookingsCount === 0) {
             const result = await Swal.fire({
@@ -269,6 +273,8 @@ const AdminCalendarPage = () => {
                 <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: #777;">
                     Data: <b>${clickInfo.event.start.toLocaleDateString()}</b> (${clickInfo.event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${clickInfo.event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
                 </p>
+
+                ${description ? `<div style="background: #fdf2eb; color: #d28b5b; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 12px;"><b>Opis zajęć:</b> ${description}</div>` : ''}
 
                 <p style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Zapisani uczniowie:</p>
                 <ul style="padding-left: 0; list-style: none; margin: 0 0 20px 0;">

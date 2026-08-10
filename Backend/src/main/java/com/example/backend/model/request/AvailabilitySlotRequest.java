@@ -12,6 +12,7 @@ public record AvailabilitySlotRequest(
                 @Schema(description = "Data zakończenia slotu", example = "2026-08-01T11:00:00Z") @NotNull(message = "Data zakończenia jest wymagana") Instant endTime,
 
                 @NotBlank(message = "Poziom jest wymagany") String level,
+                String description,
 
                 @NotBlank(message = "Typ lekcji jest wymagany (INDIVIDUAL/GROUP)") String lessonType) {
         @AssertTrue(message = "Data zakończenia musi być późniejsza niż data rozpoczęcia")
