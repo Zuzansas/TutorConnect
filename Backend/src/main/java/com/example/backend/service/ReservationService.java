@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -202,6 +203,45 @@ public class ReservationService {
         } catch (Exception e) {
             System.err.println("Nie udało się wysłać e-maila o anulowaniu przez Korepetytora: " + e.getMessage());
         }
+    }
+
+    @Transactional
+    public void cancelGroupLessonByTutor(UUID slotId) {
+
+        List<Reservation> groupReservations = reservationRepository
+                .findAllByAvailabilitySlotIdAndStatusNot(slotId, ReservationStatus.CANCELLED);
+
+        if (groupReservations.isEmpty()) {
+            throw new NotFoundException("Brak rezerwacji dla tego terminu.");
+        }
+
+        List<User> studentsToNotify = new ArrayList<>();
+        String lessonTitle = getLessonTitleSafely(groupReservations.get(0));
+
+        for (Reservation reservation : groupReservations) {
+            reservation.setStatus(ReservationStatus.CANCELLED);
+
+            UserPackage userPackage = reservation.getUserPackage();
+            if (userPackage != null) {
+                userPackage.setRemainingLessons(userPackage.getRemainingLessons() + 1);
+                packageRepository.save(userPackage);
+            }
+
+            reservationRepository.save(reservation);
+            studentsToNotify.add(reservation.getStudent());
+        }
+
+        AvailabilitySlot slot = groupReservations.get(0).getAvailabilitySlot();
+        if (slot != null) {
+            slot.setReserved(false);
+            slotRepository.save(slot);
+        }
+
+        emailService.sendNotificationToGroup(
+                studentsToNotify,
+                lessonTitle,
+                "Odwołanie zajęć grupowych",
+                "Zajęcia zostały odwołane przez korepetytora. 1 lekcja została zwrócona do Twojego pakietu.");
     }
 
     @Transactional(readOnly = true)

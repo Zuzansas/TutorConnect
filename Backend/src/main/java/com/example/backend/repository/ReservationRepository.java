@@ -11,17 +11,18 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
         long countByAvailabilitySlotIdAndStatusNot(UUID slotId, ReservationStatus status);
 
-        @Query("SELECT r FROM Reservation r WHERE r.status = :status AND r.startTime <= :threshold")
-        List<Reservation> findUnpaidUpcoming(@Param("status") ReservationStatus status,
-                        @Param("threshold") Instant threshold);
-
         List<Reservation> findAllByStudentIdOrderByStartTimeDesc(UUID studentId);
 
         List<Reservation> findAllByOrderByStartTimeDesc();
+
+        @Query("SELECT r FROM Reservation r WHERE r.status = :status AND r.startTime <= :threshold")
+        List<Reservation> findUnpaidUpcoming(@Param("status") ReservationStatus status,
+                        @Param("threshold") Instant threshold);
 
         @Query("SELECT COUNT(r) > 0 FROM Reservation r " +
                         "WHERE r.student.id = :studentId " +

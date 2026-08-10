@@ -9,6 +9,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import com.example.backend.model.entity.User;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -336,6 +338,41 @@ public class EmailService {
 
         } catch (MessagingException e) {
             log.error("❌ Błąd podczas wysyłania e-maila o anulowaniu rezerwacji do {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendNotificationToGroup(List<User> students, String lessonTitle, String subject, String messageText) {
+        if (students == null || students.isEmpty())
+            return;
+
+        for (User student : students) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+                helper.setFrom(fromEmail);
+                helper.setTo(student.getEmail());
+                helper.setSubject("Powiadomienie dot. zajęć: " + subject);
+
+                String htmlContent = String.format(
+                        """
+                                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                                        <h2>Witaj %s! 👋</h2>
+                                        <p>Wiadomość dotycząca Twoich zajęć grupowych: <b>%s</b></p>
+                                        <div style="background-color: #fdf2eb; border-left: 4px solid #d28b5b; padding: 15px; margin: 15px 0;">
+                                            <p style="margin: 0;">%s</p>
+                                        </div>
+                                        <p style="font-size: 0.85rem; color: #888;">Pozdrawiamy,<br/>Zespół TutorConnect</p>
+                                    </div>
+                                """,
+                        student.getFullName(), lessonTitle, messageText);
+
+                helper.setText(htmlContent, true);
+                mailSender.send(message);
+            } catch (Exception e) {
+                System.err.println("Błąd wysyłania e-maila do " + student.getEmail() + ": " + e.getMessage());
+            }
         }
     }
 }

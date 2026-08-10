@@ -352,17 +352,31 @@ const ReservationsPage = () => {
         const groupedMap = new Map();
 
         rawReservations.forEach(res => {
-            const groupKey = res.slotId || `${res.startTime}_${res.lessonTitle}`;
+            const slotId = res.slotId || res.availabilitySlot?.id;
+            const groupKey = slotId || `${res.startTime}_${res.lessonTitle}`;
+
+            const studentName = res.studentName || res.student?.fullName || res.student?.username || 'Uczeń';
+            const studentEmail = res.studentEmail || res.student?.email;
 
             if (!groupedMap.has(groupKey)) {
                 groupedMap.set(groupKey, {
                     ...res,
-                    studentsList: [res.studentName],
+                    slotId: slotId,
+                    studentsList: [studentName],
+                    studentEmails: studentEmail ? [studentEmail] : [],
                     bookingCount: 1
                 });
             } else {
                 const existingGroup = groupedMap.get(groupKey);
-                existingGroup.studentsList.push(res.studentName);
+
+                if (!existingGroup.studentsList.includes(studentName)) {
+                    existingGroup.studentsList.push(studentName);
+                }
+
+                if (studentEmail && !existingGroup.studentEmails.includes(studentEmail)) {
+                    existingGroup.studentEmails.push(studentEmail);
+                }
+
                 existingGroup.bookingCount += 1;
 
                 if (res.status === 'CONFIRMED') existingGroup.status = 'CONFIRMED';
@@ -387,13 +401,25 @@ const ReservationsPage = () => {
 
     const displayedReservations = activeTab === 'upcoming' ? upcomingReservations : pastReservations;
 
-    const handleSendEmailClient = (studentEmail, lessonTitle) => {
-        if (!studentEmail) {
-            toast.error("Brak adresu e-mail ucznia.");
+    const handleSendEmailClient = (res) => {
+        let emails = [];
+
+        if (userRole === 'ADMIN' && res.studentEmails && res.studentEmails.length > 0) {
+            emails = res.studentEmails;
+        } else {
+            const singleEmail = res.studentEmail || res.student?.email;
+            if (singleEmail) emails.push(singleEmail);
+        }
+
+        if (emails.length === 0) {
+            toast.error("Brak adresu e-mail dla tej rezerwacji.");
             return;
         }
-        const subject = encodeURIComponent(`Wiadomość dotycząca zajęć: ${lessonTitle}`);
-        window.location.href = `mailto:${studentEmail}?subject=${subject}`;
+
+        const recipients = emails.join(',');
+        const subject = encodeURIComponent(`Wiadomość dotycząca zajęć: ${res.lessonTitle}`);
+
+        window.location.href = `mailto:${recipients}?subject=${subject}`;
     };
 
     if (loading) return <div className={styles.loader}>Pobieranie Twoich zajęć...</div>;
@@ -593,19 +619,20 @@ const ReservationsPage = () => {
                                     )}
 
                                     {userRole === 'ADMIN' && (
-                                        <> <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn} title="Dodaj materiały">
-                                            <FaPlus />
-                                        </button>
+                                        <>
+                                            <button onClick={() => handleOpenMaterialsModal(res.id)} className={styles.addBtn} title="Dodaj materiały">
+                                                <FaPlus />
+                                            </button>
+
                                             <button
-                                                onClick={() => handleSendEmailClient(res.studentEmail, res.lessonTitle)}
+                                                onClick={() => handleSendEmailClient(res)}
                                                 className={styles.addBtn}
-                                                title="Wyślij e-mail do ucznia"
+                                                title={`Wyślij e-mail do grupy (${res.bookingCount || 1} osób)`}
                                                 style={{ color: '#d28b5b', borderColor: '#fdf2eb', background: '#fdf2eb' }}
                                             >
                                                 <FaEnvelope />
                                             </button>
                                         </>
-
                                     )}
 
                                     {res.status !== 'CANCELLED' && (userRole === 'ADMIN' || !isPast) && (
