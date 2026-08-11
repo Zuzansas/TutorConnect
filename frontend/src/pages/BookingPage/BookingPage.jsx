@@ -175,7 +175,7 @@ const BookingPage = () => {
                     <h1 className={styles.titleText}>Wybierz termin zajęć</h1>
                     {userPackage && (
                         <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#d28b5b', fontWeight: 'bold' }}>
-                            Pakiet: {userPackage.lessonOffer.title} ({userPackage.lessonOffer.level} - {userPackage.lessonOffer.lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'})
+                            Pakiet: {userPackage.lessonOffer.title} ({userPackage.lessonOffer.level})
                         </p>
                     )}
                 </header>
@@ -267,7 +267,7 @@ const BookingPage = () => {
                         })
                     ) : (
                         <p className={styles.statusMsg}>
-                            Brak pasujących wolnych terminów ({userPackage?.lessonOffer.level} / {userPackage?.lessonOffer.lessonType === 'GROUP' ? 'Grupowe' : 'Indywidualne'}) na ten dzień.
+                            Brak pasujących wolnych terminów na ten dzień.
                         </p>
                     )}
                 </div>
