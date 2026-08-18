@@ -118,22 +118,115 @@ const ReservationsPage = () => {
     };
 
     const handleAddReview = async (res) => {
+        const targetOfferId = res.lessonOfferId
+            || res.lessonOffer?.id
+            || res.userPackage?.lessonOffer?.id
+            || res.userPackage?.offerId
+            || res.offerId;
+
+        if (!targetOfferId) {
+            toast.error("Błąd: Nie znaleziono ID oferty powiązanej z tą lekcją.");
+            return;
+        }
+
+        let selectedRating = 5;
+        const ratingLabels = {
+            1: 'Słaba',
+            2: 'Przeciętna',
+            3: 'Dobra',
+            4: 'Bardzo dobra',
+            5: 'Znakomita!'
+        };
+
         const { value: formValues } = await Swal.fire({
-            title: 'Oceń lekcję',
+            title: '<span style="color: #2c3e50; font-weight: 700;">Oceń lekcję</span>',
             html: `
-                <div style="display:flex; flex-direction:column; gap:10px; text-align:left;">
-                    <label>Ocena (1-5):</label>
-                    <input type="number" id="review-rating" class="swal2-input" min="1" max="5" value="5">
-                    <label>Twoja opinia:</label>
-                    <textarea id="review-message" class="swal2-textarea" placeholder="Napisz kilka słów o zajęciach..."></textarea>
+                <div style="display: flex; flex-direction: column; gap: 15px; text-align: left; font-family: 'Inter', sans-serif; padding: 5px 0;">
+                    
+                    <!-- GWIAZDKI -->
+                    <div style="text-align: center; margin: 10px 0;">
+                        <div id="star-rating-container" style="display: inline-flex; gap: 8px; font-size: 2.2rem; cursor: pointer;">
+                            <span class="star-item" data-value="1" style="color: #f1c40f; transition: transform 0.15s ease;">★</span>
+                            <span class="star-item" data-value="2" style="color: #f1c40f; transition: transform 0.15s ease;">★</span>
+                            <span class="star-item" data-value="3" style="color: #f1c40f; transition: transform 0.15s ease;">★</span>
+                            <span class="star-item" data-value="4" style="color: #f1c40f; transition: transform 0.15s ease;">★</span>
+                            <span class="star-item" data-value="5" style="color: #f1c40f; transition: transform 0.15s ease;">★</span>
+                        </div>
+                        <div id="rating-text-hint" style="font-size: 0.9rem; font-weight: 700; color: #d28b5b; margin-top: 6px;">
+                            5/5 - Znakomita!
+                        </div>
+                    </div>
+
+                    <!-- OPIS OPINII -->
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #7f8c8d; text-transform: uppercase;">Twoja opinia:</label>
+                        <textarea 
+                            id="review-message" 
+                            class="swal2-textarea" 
+                            style="margin: 0; width: 100%; border-radius: 10px; border: 1px solid #f1ece8; min-height: 90px; font-size: 0.9rem; padding: 10px;" 
+                            placeholder="Napisz kilka słów o zajęciach i podejściu korepetytora..."
+                        ></textarea>
+                    </div>
                 </div>
             `,
+            focusConfirm: false,
             confirmButtonColor: '#d28b5b',
             confirmButtonText: 'Dodaj opinię',
-            preConfirm: () => ({
-                rating: document.getElementById('review-rating').value,
-                message: document.getElementById('review-message').value
-            })
+            showCancelButton: true,
+            cancelButtonColor: '#95a5a6',
+            cancelButtonText: 'Anuluj',
+            didOpen: () => {
+                const stars = document.querySelectorAll('#star-rating-container .star-item');
+                const ratingHint = document.getElementById('rating-text-hint');
+
+                const updateStarsVisual = (rating) => {
+                    stars.forEach(star => {
+                        const val = parseInt(star.getAttribute('data-value'), 10);
+                        if (val <= rating) {
+                            star.style.color = '#f1c40f';
+                            star.style.opacity = '1';
+                        } else {
+                            star.style.color = '#e0e0e0';
+                            star.style.opacity = '0.7';
+                        }
+                    });
+                    if (ratingHint) {
+                        ratingHint.textContent = ratingLabels[rating] || `${rating}/5`;
+                    }
+                };
+
+
+                stars.forEach(star => {
+                    star.addEventListener('mouseenter', () => {
+                        const hoverVal = parseInt(star.getAttribute('data-value'), 10);
+                        updateStarsVisual(hoverVal);
+                        star.style.transform = 'scale(1.2)';
+                    });
+
+                    star.addEventListener('mouseleave', () => {
+                        updateStarsVisual(selectedRating);
+                        star.style.transform = 'scale(1)';
+                    });
+
+                    star.addEventListener('click', () => {
+                        selectedRating = parseInt(star.getAttribute('data-value'), 10);
+                        updateStarsVisual(selectedRating);
+                    });
+                });
+
+                updateStarsVisual(selectedRating);
+            },
+            preConfirm: () => {
+                const message = document.getElementById('review-message').value;
+                if (!message || message.trim().length === 0) {
+                    Swal.showValidationMessage('Napisz krótką treść opinii!');
+                    return false;
+                }
+                return {
+                    rating: selectedRating,
+                    message: message.trim()
+                };
+            }
         });
 
         if (formValues) {
@@ -145,18 +238,22 @@ const ReservationsPage = () => {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        reviewedLessonId: res.lessonOfferId,
+                        reviewedLessonId: targetOfferId,
                         message: formValues.message,
-                        rating: parseInt(formValues.rating, 10)
+                        rating: formValues.rating
                     })
                 });
 
                 if (response.ok) {
                     toast.success("Dziękujemy za opinię!");
-                    fetchUserReviews();
+                    await fetchUserReviews();
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    toast.error(errData.message || "Błąd dodawania opinii.");
                 }
             } catch (error) {
-                toast.error("Błąd dodawania opinii.");
+                console.error("Błąd sieci:", error);
+                toast.error("Błąd połączenia z serwerem.");
             }
         }
     };
@@ -708,7 +805,7 @@ const ReservationsPage = () => {
                                     </button>
 
 
-                                    {isPast && res.status === 'COMPLETED' && userRole !== 'ADMIN' && (
+                                    {isPast && res.status !== 'CANCELLED' && userRole !== 'ADMIN' && (
                                         existingReview ? (
                                             <button onClick={() => handleDeleteReview(existingReview.id)} className={styles.deleteReviewBtn}>
                                                 <FaStar /> Usuń opinię

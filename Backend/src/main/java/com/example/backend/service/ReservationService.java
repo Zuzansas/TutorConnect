@@ -278,17 +278,26 @@ public class ReservationService {
                 "Zajęcia zostały odwołane przez korepetytora. 1 lekcja została zwrócona do Twojego pakietu.");
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ReservationResponse> getReservations(String principalName) {
         User user = userRepository.findByEmail(principalName)
                 .orElseGet(() -> userRepository.findByUsername(principalName)
-                        .orElseThrow(() -> new NotFoundException("Użytkownik nie istnieje")));
+                        .orElseThrow(() -> new NotFoundException("Użytkownik nie istnieje: " + principalName)));
 
-        List<Reservation> reservations;
+        List<Reservation> reservations = new ArrayList<>();
+
         if (user.isAdmin()) {
             reservations = reservationRepository.findAllByOrderByStartTimeDesc();
         } else {
             reservations = reservationRepository.findAllByStudentIdOrderByStartTimeDesc(user.getId());
+        }
+
+        Instant now = Instant.now();
+        for (Reservation res : reservations) {
+            if (res.getStatus() == ReservationStatus.CONFIRMED && res.getEndTime().isBefore(now)) {
+                res.setStatus(ReservationStatus.COMPLETED);
+                reservationRepository.save(res);
+            }
         }
 
         return reservations.stream()

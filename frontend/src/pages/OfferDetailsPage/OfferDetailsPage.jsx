@@ -47,18 +47,20 @@ const OfferDetailsPage = () => {
     return (
         <div className={styles.wrapper}>
             <div className={styles.container}>
-                <div className={styles.mainContent}>
-                    <MainInfo offer={mappedOffer} />
+
+                <MainInfo offer={mappedOffer} />
+
+                <div>
+                    <PriceInfo
+                        pricePerHour={offer.price}
+                        duration={offer.durationMinutes}
+                        offerId={offer.id}
+                        lessonType={offer.lessonType}
+                        totalLessons={offer.totalLessons}
+                    />
                     <ReviewSection lessonId={id} />
                 </div>
 
-                <PriceInfo
-                    pricePerHour={offer.price}
-                    duration={offer.durationMinutes}
-                    offerId={offer.id}
-                    lessonType={offer.lessonType}
-                    totalLessons={offer.totalLessons}
-                />
             </div>
         </div>
     );
