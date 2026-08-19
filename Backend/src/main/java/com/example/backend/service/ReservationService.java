@@ -52,7 +52,7 @@ public class ReservationService {
                 .studentEmail(student != null ? student.getEmail() : null)
                 .studentBio(student != null ? student.getBio() : null)
                 .studentCity(student != null ? student.getCity() : null)
-
+                .studentAvatarUrl(student != null ? student.getAvatarURL() : null)
                 .startTime(reservation.getStartTime())
                 .endTime(reservation.getEndTime())
                 .price(reservation.getPrice())
